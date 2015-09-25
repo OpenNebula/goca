@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/kolo/xmlrpc"
@@ -15,14 +16,6 @@ import (
 var (
 	client *Client
 )
-
-func init() {
-	var err error
-	client, err = NewClient()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
 
 type Client struct {
 	token        string
@@ -36,6 +29,60 @@ type Response struct {
 
 type XML string
 
+func init() {
+	err := SetClient()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func SystemVersion() string {
+	response, err := client.Call("one.system.version")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return response.Body
+}
+
+func SetClient(args ...string) error {
+	var auth_token string
+	var one_auth_path string
+
+	if len(args) == 1 {
+		auth_token = args[0]
+	} else {
+		one_auth_path = os.Getenv("ONE_AUTH")
+		if one_auth_path == "" {
+			one_auth_path = os.Getenv("HOME") + "/.one/one_auth"
+		}
+
+		token, err := ioutil.ReadFile(one_auth_path)
+		if err == nil {
+			auth_token = strings.TrimSpace(string(token))
+		} else {
+			return err
+		}
+	}
+
+	one_xmlrpc := os.Getenv("ONE_XMLRPC")
+	if one_xmlrpc == "" {
+		one_xmlrpc = "http://localhost:2633/RPC2"
+	}
+
+	xmlrpcClient, err := xmlrpc.NewClient(one_xmlrpc, nil)
+	if err != nil {
+		return err
+	}
+
+	client = &Client{
+		token:        auth_token,
+		xmlrpcClient: xmlrpcClient,
+	}
+
+	return nil
+}
+
 func (r *Response) String() string {
 	return fmt.Sprintf("Status: %v\nBody:\n%v\n", r.Status, r.Body)
 }
@@ -43,25 +90,6 @@ func (r *Response) String() string {
 func (r *Response) Debug() error {
 	fmt.Println(r)
 	return nil
-}
-
-func NewClient() (*Client, error) {
-	token, err := ioutil.ReadFile("/var/lib/one/.one/one_auth")
-	if err != nil {
-		return nil, err
-	}
-
-	xmlrpcClient, err := xmlrpc.NewClient("http://localhost:2633/RPC2", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	c := &Client{
-		token:        strings.TrimSpace(string(token)),
-		xmlrpcClient: xmlrpcClient,
-	}
-
-	return c, nil
 }
 
 func (c *Client) SystemVersion() (r *Response, err error) {
