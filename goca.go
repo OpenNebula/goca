@@ -3,10 +3,10 @@ package goca
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/kolo/xmlrpc"
@@ -14,20 +14,30 @@ import (
 )
 
 var (
-	client *Client
+	client *oneClient
 )
 
-type Client struct {
+type oneClient struct {
 	token        string
 	xmlrpcClient *xmlrpc.Client
 }
 
-type Response struct {
-	Status bool
-	Body   string
+type response struct {
+	status bool
+	body   string
 }
 
-type XML string
+type xmlResource struct {
+	body string
+}
+
+type xmlIter struct {
+	iter *xmlpath.Iter
+}
+
+type xmlNode struct {
+	node *xmlpath.Node
+}
 
 func init() {
 	err := SetClient()
@@ -36,13 +46,8 @@ func init() {
 	}
 }
 
-func SystemVersion() string {
-	response, err := client.Call("one.system.version")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return response.Body
+func Client() *oneClient {
+	return client
 }
 
 func SetClient(args ...string) error {
@@ -72,10 +77,10 @@ func SetClient(args ...string) error {
 
 	xmlrpcClient, err := xmlrpc.NewClient(one_xmlrpc, nil)
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 
-	client = &Client{
+	client = &oneClient{
 		token:        auth_token,
 		xmlrpcClient: xmlrpcClient,
 	}
@@ -83,21 +88,16 @@ func SetClient(args ...string) error {
 	return nil
 }
 
-func (r *Response) String() string {
-	return fmt.Sprintf("Status: %v\nBody:\n%v\n", r.Status, r.Body)
+func SystemVersion() string {
+	response, err := client.Call("one.system.version")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return response.String()
 }
 
-func (r *Response) Debug() error {
-	fmt.Println(r)
-	return nil
-}
-
-func (c *Client) SystemVersion() (r *Response, err error) {
-	r, err = c.Call("one.system.version")
-	return
-}
-
-func (c *Client) Call(method string, args ...interface{}) (r *Response, err error) {
+func (c *oneClient) Call(method string, args ...interface{}) (*response, error) {
 	result := []interface{}{}
 
 	xmlArgs := make([]interface{}, len(args)+1)
@@ -105,7 +105,7 @@ func (c *Client) Call(method string, args ...interface{}) (r *Response, err erro
 	xmlArgs[0] = c.token
 	copy(xmlArgs[1:], args[:])
 
-	err = c.xmlrpcClient.Call(method, xmlArgs, &result)
+	err := c.xmlrpcClient.Call(method, xmlArgs, &result)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -124,29 +124,77 @@ func (c *Client) Call(method string, args ...interface{}) (r *Response, err erro
 
 	// TODO: errCode? result[2]
 
-	r = &Response{Status: status, Body: body}
+	r := &response{status, body}
 
 	if status == false {
 		err = errors.New(body)
 	}
 
-	return
+	return r, err
 }
 
-func (xml XML) XPath(xpath string) (string, bool) {
+func (r *response) String() string {
+	return r.body
+}
+
+func (r *xmlResource) Body() string {
+	return r.body
+}
+
+func (r *xmlResource) XPath(xpath string) (string, bool) {
 	path := xmlpath.MustCompile(xpath)
-	b := bytes.NewBufferString(string(xml))
+	b := bytes.NewBufferString(r.Body())
 
 	root, _ := xmlpath.Parse(b)
 
 	return path.String(root)
 }
 
-func (xml XML) XPathIter(xpath string) *xmlpath.Iter {
+func (r *xmlResource) XPathIter(xpath string) *xmlIter {
 	path := xmlpath.MustCompile(xpath)
-	b := bytes.NewBufferString(string(xml))
+	b := bytes.NewBufferString(string(r.Body()))
 
 	root, _ := xmlpath.Parse(b)
 
-	return path.Iter(root)
+	return &xmlIter{iter: path.Iter(root)}
+}
+
+func (r *xmlResource) GetIdFromName(name string, xpath string) (uint, error) {
+	var id int
+	var match bool = false
+
+	iter := r.XPathIter(xpath)
+	for iter.Next() {
+		node := iter.Node()
+
+		n, _ := node.XPathNode("NAME")
+		if n == name {
+			if match {
+				return 0, errors.New("Multiple resources with that name.")
+			}
+
+			idString, _ := node.XPathNode("ID")
+			id, _ = strconv.Atoi(idString)
+			match = true
+		}
+	}
+
+	if match {
+		return uint(id), nil
+	} else {
+		return 0, errors.New("Resource not found.")
+	}
+}
+
+func (i *xmlIter) Next() bool {
+	return i.iter.Next()
+}
+
+func (i *xmlIter) Node() *xmlNode {
+	return &xmlNode{node: i.iter.Node()}
+}
+
+func (n *xmlNode) XPathNode(xpath string) (string, bool) {
+	path := xmlpath.MustCompile(xpath)
+	return path.String(n.node)
 }
