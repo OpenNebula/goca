@@ -5,14 +5,14 @@ import (
 	"strconv"
 )
 
-type vm struct {
-	xmlResource
+type VM struct {
+	XMLResource
 	Id   uint
 	Name string
 }
 
-type vmPool struct {
-	xmlResource
+type VMPool struct {
+	XMLResource
 }
 
 const (
@@ -181,7 +181,7 @@ func (l LCM_STATE) String() string {
 	}[l]
 }
 
-func NewVMPool(args ...int) (*vmPool, error) {
+func NewVMPool(args ...int) (*VMPool, error) {
 	var who, start_id, end_id, state int
 
 	switch len(args) {
@@ -214,17 +214,17 @@ func NewVMPool(args ...int) (*vmPool, error) {
 		return nil, err
 	}
 
-	vmpool := &vmPool{xmlResource: xmlResource{body: response.String()}}
+	vmpool := &VMPool{XMLResource: XMLResource{body: response.String()}}
 
 	return vmpool, err
 
 }
 
-func NewVM(id uint) *vm {
-	return &vm{Id: id}
+func NewVM(id uint) *VM {
+	return &VM{Id: id}
 }
 
-func NewVMFromName(name string) (*vm, error) {
+func NewVMFromName(name string) (*VM, error) {
 	vmpool, err := NewVMPool()
 	if err != nil {
 		return nil, err
@@ -238,7 +238,7 @@ func NewVMFromName(name string) (*vm, error) {
 	return NewVM(id), nil
 }
 
-func (vm *vm) Info(args ...bool) error {
+func (vm *VM) Info(args ...bool) error {
 	force := true
 	if len(args) == 1 {
 		force = args[0]
@@ -253,7 +253,7 @@ func (vm *vm) Info(args ...bool) error {
 	return nil
 }
 
-func (vm *vm) State() (int, int, error) {
+func (vm *VM) State() (int, int, error) {
 	vm_stateString, ok := vm.XPath("/VM/STATE")
 	if ok != true {
 		return -1, -1, errors.New("Unable to parse VM State")
@@ -270,7 +270,7 @@ func (vm *vm) State() (int, int, error) {
 	return vm_state, lcm_state, nil
 }
 
-func (vm *vm) StateString() (string, string, error) {
+func (vm *VM) StateString() (string, string, error) {
 	vm_state, lcm_state, err := vm.State()
 	if err != nil {
 		return "", "", err

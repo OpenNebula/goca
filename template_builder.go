@@ -5,66 +5,79 @@ import (
 	"strings"
 )
 
-type TemplateBuilder struct {
-	body []byte
+type Template struct {
+	elements []TemplateElement
 }
 
-func NewTemplateBuilder() *TemplateBuilder {
-	return &TemplateBuilder{}
+type TemplateElement interface {
+	String() string
 }
 
-func (t *TemplateBuilder) String() string {
-	return string(t.body)
+type TemplatePair struct {
+	key   string
+	value string
 }
 
-func (t *TemplateBuilder) AddValue(param, val string) error {
-	paramUpper := strings.ToUpper(param)
+type TemplateVector struct {
+	key   string
+	pairs []TemplatePair
+}
 
-	var startToken string
-	if len(t.body) == 0 {
-		startToken = ""
-	} else {
-		startToken = "\n"
+func NewTemplate() *Template {
+	return &Template{}
+}
+
+func (t *Template) NewVector(key string) *TemplateVector {
+	vector := &TemplateVector{key: key}
+	t.elements = append(t.elements, vector)
+	return vector
+}
+
+func (t *Template) String() string {
+	s := ""
+	endToken := "\n"
+
+	for i, element := range t.elements {
+		if i == len(t.elements)-1 {
+			endToken = ""
+		}
+		s += element.String() + endToken
 	}
 
-	s := fmt.Sprintf("%s%s=\"%s\"", startToken, paramUpper, val)
-	t.body = append(t.body, s...)
+	return s
+}
+
+func (t *TemplatePair) String() string {
+	return fmt.Sprintf("%s=\"%s\"", t.key, t.value)
+}
+
+func (t *TemplateVector) String() string {
+	s := fmt.Sprintf("%s=[\n", strings.ToUpper(t.key))
+
+	endToken := ",\n"
+	for i, pair := range t.pairs {
+		if i == len(t.pairs)-1 {
+			endToken = ""
+		}
+
+		s += fmt.Sprintf("    %s%s", pair.String(), endToken)
+
+	}
+	s += " ]"
+
+	return s
+}
+
+func (t *Template) AddValue(key, val string) error {
+	pair := &TemplatePair{strings.ToUpper(key), val}
+	t.elements = append(t.elements, pair)
+
 	return nil
 }
 
-func (t *TemplateBuilder) AddVector(param, val string) error {
-	paramUpper := strings.ToUpper(param)
+func (t *TemplateVector) AddValue(key, val string) error {
+	pair := TemplatePair{strings.ToUpper(key), val}
+	t.pairs = append(t.pairs, pair)
 
-	var startToken string
-	if len(t.body) == 0 {
-		startToken = ""
-	} else {
-		startToken = "\n"
-	}
-
-	valSplit := strings.Split(val, "\n")
-	val = strings.Join(valSplit, ",\n")
-
-	s := fmt.Sprintf("%s%s=[%s ]", startToken, paramUpper, val)
-	t.body = append(t.body, s...)
 	return nil
 }
-
-// var template, vector *goca.TemplateBuilder
-
-// template = goca.NewTemplateBuilder()
-
-// template.AddValue("cpu", "1")
-// template.AddValue("memory", "64")
-
-// vector = goca.NewTemplateBuilder()
-// vector.AddValue("image_id", "119")
-// vector.AddValue("image_id", "119")
-// template.AddVector("disk", vector.String())
-
-// vector = goca.NewTemplateBuilder()
-// vector.AddValue("image_id", "119")
-// vector.AddValue("image_id", "119")
-// template.AddVector("disk", vector.String())
-
-// fmt.Println(template)

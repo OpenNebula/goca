@@ -27,15 +27,15 @@ type response struct {
 	body   string
 }
 
-type xmlResource struct {
+type XMLResource struct {
 	body string
 }
 
-type xmlIter struct {
+type XMLIter struct {
 	iter *xmlpath.Iter
 }
 
-type xmlNode struct {
+type XMLNode struct {
 	node *xmlpath.Node
 }
 
@@ -137,11 +137,11 @@ func (r *response) String() string {
 	return r.body
 }
 
-func (r *xmlResource) Body() string {
+func (r *XMLResource) Body() string {
 	return r.body
 }
 
-func (r *xmlResource) XPath(xpath string) (string, bool) {
+func (r *XMLResource) XPath(xpath string) (string, bool) {
 	path := xmlpath.MustCompile(xpath)
 	b := bytes.NewBufferString(r.Body())
 
@@ -150,16 +150,16 @@ func (r *xmlResource) XPath(xpath string) (string, bool) {
 	return path.String(root)
 }
 
-func (r *xmlResource) XPathIter(xpath string) *xmlIter {
+func (r *XMLResource) XPathIter(xpath string) *XMLIter {
 	path := xmlpath.MustCompile(xpath)
 	b := bytes.NewBufferString(string(r.Body()))
 
 	root, _ := xmlpath.Parse(b)
 
-	return &xmlIter{iter: path.Iter(root)}
+	return &XMLIter{iter: path.Iter(root)}
 }
 
-func (r *xmlResource) GetIdFromName(name string, xpath string) (uint, error) {
+func (r *XMLResource) GetIdFromName(name string, xpath string) (uint, error) {
 	var id int
 	var match bool = false
 
@@ -186,15 +186,15 @@ func (r *xmlResource) GetIdFromName(name string, xpath string) (uint, error) {
 	}
 }
 
-func (i *xmlIter) Next() bool {
+func (i *XMLIter) Next() bool {
 	return i.iter.Next()
 }
 
-func (i *xmlIter) Node() *xmlNode {
-	return &xmlNode{node: i.iter.Node()}
+func (i *XMLIter) Node() *XMLNode {
+	return &XMLNode{node: i.iter.Node()}
 }
 
-func (n *xmlNode) XPathNode(xpath string) (string, bool) {
+func (n *XMLNode) XPathNode(xpath string) (string, bool) {
 	path := xmlpath.MustCompile(xpath)
 	return path.String(n.node)
 }
