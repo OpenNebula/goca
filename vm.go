@@ -15,25 +15,19 @@ type VMPool struct {
 	XMLResource
 }
 
-const (
-	VMPoolWhoMine  = -3
-	VMPoolWhoAll   = -2
-	VMPoolWhoGroup = -1
-)
-
 type VM_STATE int
 
 const (
-	INIT VM_STATE = iota
-	PENDING
-	HOLD
-	ACTIVE
-	STOPPED
-	SUSPENDED
-	DONE
-	FAILED
-	POWEROFF
-	UNDEPLOYED
+	VM_INIT VM_STATE = iota
+	VM_PENDING
+	VM_HOLD
+	VM_ACTIVE
+	VM_STOPPED
+	VM_SUSPENDED
+	VM_DONE
+	VM_FAILED
+	VM_POWEROFF
+	VM_UNDEPLOYED
 )
 
 func (s VM_STATE) String() string {
@@ -186,7 +180,7 @@ func NewVMPool(args ...int) (*VMPool, error) {
 
 	switch len(args) {
 	case 0:
-		who = VMPoolWhoMine
+		who = PoolWhoMine
 		start_id = -1
 		end_id = -1
 		state = -1
@@ -220,6 +214,15 @@ func NewVMPool(args ...int) (*VMPool, error) {
 
 }
 
+func CreateVM(template string, pending bool) (uint, error) {
+	response, err := client.Call("one.vm.allocate", template, pending)
+	if err != nil {
+		return 0, err
+	}
+
+	return uint(response.BodyInt()), nil
+}
+
 func NewVM(id uint) *VM {
 	return &VM{Id: id}
 }
@@ -238,19 +241,10 @@ func NewVMFromName(name string) (*VM, error) {
 	return NewVM(id), nil
 }
 
-func (vm *VM) Info(args ...bool) error {
-	force := true
-	if len(args) == 1 {
-		force = args[0]
-	}
-
-	if force || vm.body != "" {
-		response, err := client.Call("one.vm.info", vm.Id)
-		vm.body = response.String()
-		return err
-	}
-
-	return nil
+func (vm *VM) Info() error {
+	response, err := client.Call("one.vm.info", vm.Id)
+	vm.body = response.Body()
+	return err
 }
 
 func (vm *VM) State() (int, int, error) {
@@ -276,4 +270,32 @@ func (vm *VM) StateString() (string, string, error) {
 		return "", "", err
 	}
 	return VM_STATE(vm_state).String(), LCM_STATE(lcm_state).String(), nil
+}
+
+func (vm *VM) Action(action string) error {
+	_, err := client.Call("one.vm.action", action, vm.Id)
+	return err
+}
+
+func (vm *VM) Resume() error {
+	return vm.Action("resume")
+}
+func (vm *VM) Reboot() error {
+	return vm.Action("reboot")
+}
+
+func (vm *VM) PowerOff() error {
+	return vm.Action("poweroff-hard")
+}
+
+func (vm *VM) PowerOffHard() error {
+	return vm.Action("poweroff-hard")
+}
+
+func (vm *VM) Shutdown() error {
+	return vm.Action("shutdown-hard")
+}
+
+func (vm *VM) ShutdownHard() error {
+	return vm.Action("shutdown-hard")
 }

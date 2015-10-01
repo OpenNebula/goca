@@ -17,6 +17,12 @@ var (
 	client *oneClient
 )
 
+const (
+	PoolWhoMine  = -3
+	PoolWhoAll   = -2
+	PoolWhoGroup = -1
+)
+
 type oneClient struct {
 	token        string
 	xmlrpcClient *xmlrpc.Client
