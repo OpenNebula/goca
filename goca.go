@@ -23,8 +23,9 @@ type oneClient struct {
 }
 
 type response struct {
-	status bool
-	body   string
+	status  bool
+	body    string
+	bodyInt int
 }
 
 type XMLResource struct {
@@ -88,16 +89,24 @@ func SetClient(args ...string) error {
 	return nil
 }
 
-func SystemVersion() string {
+func SystemVersion() (string, error) {
 	response, err := client.Call("one.system.version")
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
-	return response.String()
+	return response.Body(), nil
 }
 
 func (c *oneClient) Call(method string, args ...interface{}) (*response, error) {
+	var (
+		ok bool
+
+		status  bool
+		body    string
+		bodyInt int64
+	)
+
 	result := []interface{}{}
 
 	xmlArgs := make([]interface{}, len(args)+1)
@@ -110,21 +119,22 @@ func (c *oneClient) Call(method string, args ...interface{}) (*response, error) 
 		log.Fatal(err)
 	}
 
-	var ok bool
-
-	status, ok := result[0].(bool)
+	status, ok = result[0].(bool)
 	if ok == false {
-		log.Fatal("Unexpected XML-RPC response. Expected: Index 0 Boolean ")
+		log.Fatal("Unexpected XML-RPC response. Expected: Index 0 Boolean")
 	}
 
-	body, ok := result[1].(string)
+	body, ok = result[1].(string)
 	if ok == false {
-		log.Fatal("Unexpected XML-RPC response. Expected: Index 0 String ")
+		bodyInt, ok = result[1].(int64)
+		if ok == false {
+			log.Fatal("Unexpected XML-RPC response. Expected: Index 0 Int or String")
+		}
 	}
 
 	// TODO: errCode? result[2]
 
-	r := &response{status, body}
+	r := &response{status, body, int(bodyInt)}
 
 	if status == false {
 		err = errors.New(body)
@@ -133,8 +143,12 @@ func (c *oneClient) Call(method string, args ...interface{}) (*response, error) 
 	return r, err
 }
 
-func (r *response) String() string {
+func (r *response) Body() string {
 	return r.body
+}
+
+func (r *response) BodyInt() int {
+	return r.bodyInt
 }
 
 func (r *XMLResource) Body() string {

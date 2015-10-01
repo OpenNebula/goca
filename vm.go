@@ -214,7 +214,7 @@ func NewVMPool(args ...int) (*VMPool, error) {
 		return nil, err
 	}
 
-	vmpool := &VMPool{XMLResource: XMLResource{body: response.String()}}
+	vmpool := &VMPool{XMLResource{body: response.Body()}}
 
 	return vmpool, err
 
