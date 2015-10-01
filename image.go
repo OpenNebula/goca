@@ -122,3 +122,8 @@ func (image *Image) StateString() (string, error) {
 	}
 	return IMAGE_STATE(image_state).String(), nil
 }
+
+func (image *Image) Delete() error {
+	_, err := client.Call("one.image.delete", image.Id)
+	return err
+}
