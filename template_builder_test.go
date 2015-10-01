@@ -7,7 +7,7 @@ import (
 func Example() {
 	template := NewTemplateBuilder()
 
-	template.AddValue("cpu", "1")
+	template.AddValue("cpu", 1)
 	template.AddValue("memory", "64")
 	vector := template.NewVector("disk")
 	vector.AddValue("image_id", "119")

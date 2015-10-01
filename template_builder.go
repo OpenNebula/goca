@@ -1,6 +1,7 @@
 package goca
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -68,14 +69,36 @@ func (t *TemplateBuilderVector) String() string {
 	return s
 }
 
-func (t *TemplateBuilder) AddValue(key, val string) error {
+func (t *TemplateBuilder) AddValue(key string, v interface{}) error {
+	var val string
+
+	switch v := v.(type) {
+	default:
+		return errors.New("Unexpected type")
+	case int, uint:
+		val = fmt.Sprintf("%d", v)
+	case string:
+		val = v
+	}
+
 	pair := &TemplateBuilderPair{strings.ToUpper(key), val}
 	t.elements = append(t.elements, pair)
 
 	return nil
 }
 
-func (t *TemplateBuilderVector) AddValue(key, val string) error {
+func (t *TemplateBuilderVector) AddValue(key string, v interface{}) error {
+	var val string
+
+	switch v := v.(type) {
+	default:
+		return errors.New("Unexpected type")
+	case int, uint:
+		val = fmt.Sprintf("%d", v)
+	case string:
+		val = v
+	}
+
 	pair := TemplateBuilderPair{strings.ToUpper(key), val}
 	t.pairs = append(t.pairs, pair)
 
