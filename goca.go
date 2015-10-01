@@ -3,6 +3,7 @@ package goca
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -24,8 +25,9 @@ const (
 )
 
 type oneClient struct {
-	token        string
-	xmlrpcClient *xmlrpc.Client
+	token             string
+	xmlrpcClient      *xmlrpc.Client
+	xmlrpcClientError error
 }
 
 type response struct {
@@ -73,7 +75,7 @@ func SetClient(args ...string) error {
 		if err == nil {
 			auth_token = strings.TrimSpace(string(token))
 		} else {
-			return err
+			auth_token = ""
 		}
 	}
 
@@ -82,14 +84,12 @@ func SetClient(args ...string) error {
 		one_xmlrpc = "http://localhost:2633/RPC2"
 	}
 
-	xmlrpcClient, err := xmlrpc.NewClient(one_xmlrpc, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
+	xmlrpcClient, xmlrpcClientError := xmlrpc.NewClient(one_xmlrpc, nil)
 
 	client = &oneClient{
-		token:        auth_token,
-		xmlrpcClient: xmlrpcClient,
+		token:             auth_token,
+		xmlrpcClient:      xmlrpcClient,
+		xmlrpcClientError: xmlrpcClientError,
 	}
 
 	return nil
@@ -112,6 +112,10 @@ func (c *oneClient) Call(method string, args ...interface{}) (*response, error) 
 		body    string
 		bodyInt int64
 	)
+
+	if c.xmlrpcClientError != nil {
+		return nil, errors.New(fmt.Sprintf("Unitialized client. Token: '%s', xmlrpcClient: '%s'", c.token, c.xmlrpcClientError))
+	}
 
 	result := []interface{}{}
 
