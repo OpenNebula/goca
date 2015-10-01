@@ -5,35 +5,35 @@ import (
 	"strings"
 )
 
-type Template struct {
-	elements []TemplateElement
+type TemplateBuilder struct {
+	elements []TemplateBuilderElement
 }
 
-type TemplateElement interface {
+type TemplateBuilderElement interface {
 	String() string
 }
 
-type TemplatePair struct {
+type TemplateBuilderPair struct {
 	key   string
 	value string
 }
 
-type TemplateVector struct {
+type TemplateBuilderVector struct {
 	key   string
-	pairs []TemplatePair
+	pairs []TemplateBuilderPair
 }
 
-func NewTemplate() *Template {
-	return &Template{}
+func NewTemplateBuilder() *TemplateBuilder {
+	return &TemplateBuilder{}
 }
 
-func (t *Template) NewVector(key string) *TemplateVector {
-	vector := &TemplateVector{key: key}
+func (t *TemplateBuilder) NewVector(key string) *TemplateBuilderVector {
+	vector := &TemplateBuilderVector{key: key}
 	t.elements = append(t.elements, vector)
 	return vector
 }
 
-func (t *Template) String() string {
+func (t *TemplateBuilder) String() string {
 	s := ""
 	endToken := "\n"
 
@@ -47,11 +47,11 @@ func (t *Template) String() string {
 	return s
 }
 
-func (t *TemplatePair) String() string {
+func (t *TemplateBuilderPair) String() string {
 	return fmt.Sprintf("%s=\"%s\"", t.key, t.value)
 }
 
-func (t *TemplateVector) String() string {
+func (t *TemplateBuilderVector) String() string {
 	s := fmt.Sprintf("%s=[\n", strings.ToUpper(t.key))
 
 	endToken := ",\n"
@@ -68,15 +68,15 @@ func (t *TemplateVector) String() string {
 	return s
 }
 
-func (t *Template) AddValue(key, val string) error {
-	pair := &TemplatePair{strings.ToUpper(key), val}
+func (t *TemplateBuilder) AddValue(key, val string) error {
+	pair := &TemplateBuilderPair{strings.ToUpper(key), val}
 	t.elements = append(t.elements, pair)
 
 	return nil
 }
 
-func (t *TemplateVector) AddValue(key, val string) error {
-	pair := TemplatePair{strings.ToUpper(key), val}
+func (t *TemplateBuilderVector) AddValue(key, val string) error {
+	pair := TemplateBuilderPair{strings.ToUpper(key), val}
 	t.pairs = append(t.pairs, pair)
 
 	return nil

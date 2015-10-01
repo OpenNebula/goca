@@ -5,7 +5,7 @@ import (
 )
 
 func Example() {
-	template := NewTemplate()
+	template := NewTemplateBuilder()
 
 	template.AddValue("cpu", "1")
 	template.AddValue("memory", "64")
