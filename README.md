@@ -18,7 +18,7 @@ Currently only these components have been developed:
 
 ## Examples
 
-This example demonstrates how get the information of a running VM, print its name, and power it off. It then builds a new OpenNebula template and prints it string representation.
+This example demonstrates how get the information of a running VM, print its name, and power it off. It then builds a new OpenNebula template and prints its string representation.
 
 ```go
     package main
