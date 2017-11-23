@@ -5,31 +5,55 @@ import (
 	"strconv"
 )
 
+// Image represents an OpenNebula Image
 type Image struct {
 	XMLResource
-	Id   uint
+	ID   uint
 	Name string
 }
 
+// ImagePool represents an OpenNebula Image pool
 type ImagePool struct {
 	XMLResource
 }
 
-type IMAGE_STATE int
+// ImageState is the state of the Image
+type ImageState int
 
 const (
-	IMAGE_INIT IMAGE_STATE = iota
-	IMAGE_READY
-	IMAGE_USED
-	IMAGE_DISABLED
-	IMAGE_LOCKED
-	IMAGE_ERROR
-	IMAGE_CLONE
-	IMAGE_DELETE
-	IMAGE_USED_PERS
+	// ImageInit image is being initialized
+	ImageInit ImageState = iota
+
+	// ImageReady image is ready to be used
+	ImageReady
+
+	// ImageUsed image is in use
+	ImageUsed
+
+	// ImageDisabled image is in disabled
+	ImageDisabled
+
+	// ImageLocked image is locked
+	ImageLocked
+
+	// ImageError image is in error state
+	ImageError
+
+	// ImageClone image is in clone state
+	ImageClone
+
+	// ImageDelete image is in delete state
+	ImageDelete
+
+	// ImageLockUsed image is in locked state (non-persistent)
+	ImageLockUsed
+
+	// ImageLockUsedPers image is in locked state (persistent)
+	ImageLockUsedPers
 )
 
-func (s IMAGE_STATE) String() string {
+// String returns the string version of the ImageState
+func (s ImageState) String() string {
 	return [...]string{
 		"INIT",
 		"READY",
@@ -40,11 +64,15 @@ func (s IMAGE_STATE) String() string {
 		"CLONE",
 		"DELETE",
 		"USED_PERS",
+		"LOCKED_USED",
+		"LOCKED_USED_PERS",
 	}[s]
 }
 
-func CreateImage(template string, ds_id uint) (uint, error) {
-	response, err := client.Call("one.image.allocate", template, ds_id)
+// CreateImage allocates a new image based on the template string provided. It
+// returns the image ID.
+func CreateImage(template string, dsid uint) (uint, error) {
+	response, err := client.Call("one.image.allocate", template, dsid)
 	if err != nil {
 		return 0, err
 	}
@@ -52,23 +80,25 @@ func CreateImage(template string, ds_id uint) (uint, error) {
 	return uint(response.BodyInt()), nil
 }
 
+// NewImagePool returns a new image pool. It accepts the scope of the query. It
+// performs an OpenNebula connectio to fetch the information.
 func NewImagePool(args ...int) (*ImagePool, error) {
-	var who, start_id, end_id int
+	var who, start, end int
 
 	switch len(args) {
 	case 0:
 		who = PoolWhoMine
-		start_id = -1
-		end_id = -1
+		start = -1
+		end = -1
 	case 3:
 		who = args[0]
-		start_id = args[1]
-		end_id = args[2]
+		start = args[1]
+		end = args[2]
 	default:
 		return nil, errors.New("Wrong number of arguments")
 	}
 
-	response, err := client.Call("one.imagepool.info", who, start_id, end_id)
+	response, err := client.Call("one.imagepool.info", who, start, end)
 	if err != nil {
 		return nil, err
 	}
@@ -79,17 +109,22 @@ func NewImagePool(args ...int) (*ImagePool, error) {
 
 }
 
+// NewImage finds an image by ID returns a new Image object. At this stage no
+// connection to OpenNebula is performed.
 func NewImage(id uint) *Image {
-	return &Image{Id: id}
+	return &Image{ID: id}
 }
 
+// NewImageFromName finds an image by name and returns Image object. It connects
+// to OpenNebula to retrieve the pool, but doesn't perform the Info() call to
+// retrieve the attributes of the image.
 func NewImageFromName(name string) (*Image, error) {
 	imagePool, err := NewImagePool()
 	if err != nil {
 		return nil, err
 	}
 
-	id, err := imagePool.GetIdFromName(name, "/IMAGE_POOL/IMAGE")
+	id, err := imagePool.GetIDFromName(name, "/IMAGE_POOL/IMAGE")
 	if err != nil {
 		return nil, err
 	}
@@ -97,13 +132,15 @@ func NewImageFromName(name string) (*Image, error) {
 	return NewImage(id), nil
 }
 
+// Info connects to OpenNebula and fetches the information of the Image
 func (image *Image) Info() error {
-	response, err := client.Call("one.image.info", image.Id)
+	response, err := client.Call("one.image.info", image.ID)
 	image.body = response.Body()
 	return err
 }
 
-func (image *Image) State() (int, error) {
+// State looks up the state of the image and returns the ImageState
+func (image *Image) State() (ImageState, error) {
 	stateString, ok := image.XPath("/IMAGE/STATE")
 	if ok != true {
 		return -1, errors.New("Unable to parse Image State")
@@ -111,18 +148,21 @@ func (image *Image) State() (int, error) {
 
 	state, _ := strconv.Atoi(stateString)
 
-	return state, nil
+	return ImageState(state), nil
 }
 
+// StateString returns the state in string format
 func (image *Image) StateString() (string, error) {
-	image_state, err := image.State()
+	state, err := image.State()
 	if err != nil {
 		return "", err
 	}
-	return IMAGE_STATE(image_state).String(), nil
+	return ImageState(state).String(), nil
 }
 
+// Delete will remove the image from OpenNebula, which will remove it from the
+// backend.
 func (image *Image) Delete() error {
-	_, err := client.Call("one.image.delete", image.Id)
+	_, err := client.Call("one.image.delete", image.ID)
 	return err
 }

@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/kolo/xmlrpc"
-	"launchpad.net/xmlpath"
+	"gopkg.in/xmlpath.v1"
 )
 
 var (
@@ -19,14 +19,27 @@ var (
 )
 
 const (
-	PoolWhoMine  = -3
-	PoolWhoAll   = -2
+	// PoolWhoMine to list resources that belong to the user that performs the
+	// query.
+	PoolWhoMine = -3
+
+	// PoolWhoAll to list all the resources seen by the user that performs the
+	// query.
+	PoolWhoAll = -2
+
+	// PoolWhoGroup to list all the resources that belong to the group that performs
+	// the query.
 	PoolWhoGroup = -1
 )
 
+// OneConfig contains the information to communicate with OpenNebula
 type OneConfig struct {
-	Token     string
-	XmlrpcUrl string
+	// Token is the authentication string. In the format of <user>:<password>
+	Token string
+
+	// XmlrpcURL contains OpenNebula's XML-RPC API endpoint. Defaults to
+	// http://localhost:2633/RPC2
+	XmlrpcURL string
 }
 
 type oneClient struct {
@@ -41,22 +54,23 @@ type response struct {
 	bodyInt int
 }
 
+// XMLResource contains an XML body field. All the resources in OpenNebula are
+// of this kind.
 type XMLResource struct {
 	body string
 }
 
+// XMLIter is used to iterate over XML xpaths in an object.
 type XMLIter struct {
 	iter *xmlpath.Iter
 }
 
+// XMLNode represent an XML node.
 type XMLNode struct {
 	node *xmlpath.Node
 }
 
-func Client() *oneClient {
-	return client
-}
-
+// Initializes the client variable, used as a singleton
 func init() {
 	err := SetClient(NewConfig("", "", ""))
 	if err != nil {
@@ -64,46 +78,49 @@ func init() {
 	}
 }
 
-func NewConfig(user string, password string, xmlrpcUrl string) OneConfig {
-	var auth_token string
-	var one_auth_path string
+// NewConfig returns a new OneConfig object with the specified user, password,
+// and xmlrpcURL
+func NewConfig(user string, password string, xmlrpcURL string) OneConfig {
+	var authToken string
+	var oneAuthPath string
 
-	one_xmlrpc := xmlrpcUrl
+	oneXmlrpc := xmlrpcURL
 
 	if user == "" && password == "" {
-		one_auth_path = os.Getenv("ONE_AUTH")
-		if one_auth_path == "" {
-			one_auth_path = os.Getenv("HOME") + "/.one/one_auth"
+		oneAuthPath = os.Getenv("ONE_AUTH")
+		if oneAuthPath == "" {
+			oneAuthPath = os.Getenv("HOME") + "/.one/one_auth"
 		}
 
-		token, err := ioutil.ReadFile(one_auth_path)
+		token, err := ioutil.ReadFile(oneAuthPath)
 		if err == nil {
-			auth_token = strings.TrimSpace(string(token))
+			authToken = strings.TrimSpace(string(token))
 		} else {
-			auth_token = ""
+			authToken = ""
 		}
 	} else {
-		auth_token = user + ":" + password
+		authToken = user + ":" + password
 	}
 
-	if one_xmlrpc == "" {
-		one_xmlrpc = os.Getenv("ONE_XMLRPC")
-		if one_xmlrpc == "" {
-			one_xmlrpc = "http://localhost:2633/RPC2"
+	if oneXmlrpc == "" {
+		oneXmlrpc = os.Getenv("oneXmlrpc")
+		if oneXmlrpc == "" {
+			oneXmlrpc = "http://localhost:2633/RPC2"
 		}
 	}
 
 	config := OneConfig{
-		Token:     auth_token,
-		XmlrpcUrl: one_xmlrpc,
+		Token:     authToken,
+		XmlrpcURL: oneXmlrpc,
 	}
 
 	return config
 }
 
+// SetClient assigns a value to the client variable
 func SetClient(conf OneConfig) error {
 
-	xmlrpcClient, xmlrpcClientError := xmlrpc.NewClient(conf.XmlrpcUrl, nil)
+	xmlrpcClient, xmlrpcClientError := xmlrpc.NewClient(conf.XmlrpcURL, nil)
 
 	client = &oneClient{
 		token:             conf.Token,
@@ -114,6 +131,7 @@ func SetClient(conf OneConfig) error {
 	return nil
 }
 
+// SystemVersion returns the current OpenNebula Version
 func SystemVersion() (string, error) {
 	response, err := client.Call("one.system.version")
 	if err != nil {
@@ -123,6 +141,7 @@ func SystemVersion() (string, error) {
 	return response.Body(), nil
 }
 
+// Call is an XML-RPC wrapper. It returns a pointer to response and an error.
 func (c *oneClient) Call(method string, args ...interface{}) (*response, error) {
 	var (
 		ok bool
@@ -133,7 +152,7 @@ func (c *oneClient) Call(method string, args ...interface{}) (*response, error) 
 	)
 
 	if c.xmlrpcClientError != nil {
-		return nil, errors.New(fmt.Sprintf("Unitialized client. Token: '%s', xmlrpcClient: '%s'", c.token, c.xmlrpcClientError))
+		return nil, fmt.Errorf("Unitialized client. Token: '%s', xmlrpcClient: '%s'", c.token, c.xmlrpcClientError)
 	}
 
 	result := []interface{}{}
@@ -172,18 +191,22 @@ func (c *oneClient) Call(method string, args ...interface{}) (*response, error) 
 	return r, err
 }
 
+// Body accesses the body of the response
 func (r *response) Body() string {
 	return r.body
 }
 
+// BodyInt accesses the body of the response, if it's an int.
 func (r *response) BodyInt() int {
 	return r.bodyInt
 }
 
+// Body accesses the body of an XMLResource
 func (r *XMLResource) Body() string {
 	return r.body
 }
 
+// XPath returns the string pointed at by xpath, for an XMLResource
 func (r *XMLResource) XPath(xpath string) (string, bool) {
 	path := xmlpath.MustCompile(xpath)
 	b := bytes.NewBufferString(r.Body())
@@ -193,6 +216,7 @@ func (r *XMLResource) XPath(xpath string) (string, bool) {
 	return path.String(root)
 }
 
+// XPathIter returns an XMLIter object pointed at by the xpath
 func (r *XMLResource) XPathIter(xpath string) *XMLIter {
 	path := xmlpath.MustCompile(xpath)
 	b := bytes.NewBufferString(string(r.Body()))
@@ -202,9 +226,11 @@ func (r *XMLResource) XPathIter(xpath string) *XMLIter {
 	return &XMLIter{iter: path.Iter(root)}
 }
 
-func (r *XMLResource) GetIdFromName(name string, xpath string) (uint, error) {
+// GetIDFromName finds the a resource by ID by looking at an xpath contained
+// in that resource
+func (r *XMLResource) GetIDFromName(name string, xpath string) (uint, error) {
 	var id int
-	var match bool = false
+	var match = false
 
 	iter := r.XPathIter(xpath)
 	for iter.Next() {
@@ -213,7 +239,7 @@ func (r *XMLResource) GetIdFromName(name string, xpath string) (uint, error) {
 		n, _ := node.XPathNode("NAME")
 		if n == name {
 			if match {
-				return 0, errors.New("Multiple resources with that name.")
+				return 0, errors.New("multiple resources with that name")
 			}
 
 			idString, _ := node.XPathNode("ID")
@@ -222,21 +248,24 @@ func (r *XMLResource) GetIdFromName(name string, xpath string) (uint, error) {
 		}
 	}
 
-	if match {
-		return uint(id), nil
-	} else {
-		return 0, errors.New("Resource not found.")
+	if !match {
+		return 0, errors.New("resource not found")
 	}
+
+	return uint(id), nil
 }
 
+// Next moves on to the next resource
 func (i *XMLIter) Next() bool {
 	return i.iter.Next()
 }
 
+// Node returns the XMLNode
 func (i *XMLIter) Node() *XMLNode {
 	return &XMLNode{node: i.iter.Node()}
 }
 
+// XPathNode returns an XMLNode pointed at by xpath
 func (n *XMLNode) XPathNode(xpath string) (string, bool) {
 	path := xmlpath.MustCompile(xpath)
 	return path.String(n.node)

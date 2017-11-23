@@ -5,212 +5,448 @@ import (
 	"strconv"
 )
 
+// VM represents an OpenNebula Virtual Machine
 type VM struct {
 	XMLResource
-	Id   uint
+	ID   uint
 	Name string
 }
 
+// VMPool represents an OpenNebula Virtual Machine pool
 type VMPool struct {
 	XMLResource
 }
 
-type VM_STATE int
+// VMState is the state of the Virtual Machine
+type VMState int
 
 const (
-	INIT            VM_STATE = 0
-	PENDING         VM_STATE = 1
-	HOLD            VM_STATE = 2
-	ACTIVE          VM_STATE = 3
-	STOPPED         VM_STATE = 4
-	SUSPENDED       VM_STATE = 5
-	DONE            VM_STATE = 6
-	//FAILED        VM_STATE = 7
-	POWEROFF        VM_STATE = 8
-	UNDEPLOYED      VM_STATE = 9
-	CLONING         VM_STATE = 10
-	CLONING_FAILURE VM_STATE = 11
+	// Init state
+	Init VMState = 0
+
+	// Pending state
+	Pending VMState = 1
+
+	// Hold state
+	Hold VMState = 2
+
+	// Active state
+	Active VMState = 3
+
+	// Stopped state
+	Stopped VMState = 4
+
+	// Suspended state
+	Suspended VMState = 5
+
+	// Done state
+	Done VMState = 6
+
+	// Deprecated
+	// Failed VMState = 7
+
+	// Poweroff state
+	Poweroff VMState = 8
+
+	// Undeployed state
+	Undeployed VMState = 9
+
+	// Cloning state
+	Cloning VMState = 10
+
+	// CloningFailure state
+	CloningFailure VMState = 11
 )
 
-func (s VM_STATE) String() string {
-
+func (s VMState) String() string {
 	switch s {
-	case INIT:            return "INIT"
-	case PENDING:         return "PENDING"
-	case HOLD:            return "HOLD"
-	case ACTIVE:          return "ACTIVE"
-	case STOPPED:         return "STOPPED"
-	case SUSPENDED:       return "SUSPENDED"
-	case DONE:            return "DONE"
-	case POWEROFF:        return "POWEROFF"
-	case UNDEPLOYED:      return "UNDEPLOYED"
-	case CLONING:         return "CLONING"
-	case CLONING_FAILURE: return "CLONING_FAILURE"
-	default: return ""
+	case Init:
+		return "INIT"
+	case Pending:
+		return "PENDING"
+	case Hold:
+		return "HOLD"
+	case Active:
+		return "ACTIVE"
+	case Stopped:
+		return "STOPPED"
+	case Suspended:
+		return "SUSPENDED"
+	case Done:
+		return "DONE"
+	case Poweroff:
+		return "POWEROFF"
+	case Undeployed:
+		return "UNDEPLOYED"
+	case Cloning:
+		return "CLONING"
+	case CloningFailure:
+		return "CLONINGFAILURE"
+	default:
+		return ""
 	}
 }
 
-type LCM_STATE int
+// LCMState is the life-cycle manager state of the virtual machine. It is used
+// only when the VM's state is active, otherwise it's LcmInit
+type LCMState int
 
 const (
-	LCM_INIT                         LCM_STATE  =  0
-	PROLOG                           LCM_STATE  =  1
-	BOOT                             LCM_STATE  =  2
-	RUNNING                          LCM_STATE  =  3
-	MIGRATE                          LCM_STATE  =  4
-	SAVE_STOP                        LCM_STATE  =  5
-	SAVE_SUSPEND                     LCM_STATE  =  6
-	SAVE_MIGRATE                     LCM_STATE  =  7
-	PROLOG_MIGRATE                   LCM_STATE  =  8
-	PROLOG_RESUME                    LCM_STATE  =  9
-	EPILOG_STOP                      LCM_STATE  =  10
-	EPILOG                           LCM_STATE  =  11
-	SHUTDOWN                         LCM_STATE  =  12
-	//CANCEL                         LCM_STATE  =  13
-	//FAILURE                        LCM_STATE  =  14
-	CLEANUP_RESUBMIT                 LCM_STATE  =  15
-	UNKNOWN                          LCM_STATE  =  16
-	HOTPLUG                          LCM_STATE  =  17
-	SHUTDOWN_POWEROFF                LCM_STATE  =  18
-	BOOT_UNKNOWN                     LCM_STATE  =  19
-	BOOT_POWEROFF                    LCM_STATE  =  20
-	BOOT_SUSPENDED                   LCM_STATE  =  21
-	BOOT_STOPPED                     LCM_STATE  =  22
-	CLEANUP_DELETE                   LCM_STATE  =  23
-	HOTPLUG_SNAPSHOT                 LCM_STATE  =  24
-	HOTPLUG_NIC                      LCM_STATE  =  25
-	HOTPLUG_SAVEAS                   LCM_STATE  =  26
-	HOTPLUG_SAVEAS_POWEROFF          LCM_STATE  =  27
-	HOTPLUG_SAVEAS_SUSPENDED         LCM_STATE  =  28
-	SHUTDOWN_UNDEPLOY                LCM_STATE  =  29
-	EPILOG_UNDEPLOY                  LCM_STATE  =  30
-	PROLOG_UNDEPLOY                  LCM_STATE  =  31
-	BOOT_UNDEPLOY                    LCM_STATE  =  32
-	HOTPLUG_PROLOG_POWEROFF          LCM_STATE  =  33
-	HOTPLUG_EPILOG_POWEROFF          LCM_STATE  =  34
-	BOOT_MIGRATE                     LCM_STATE  =  35
-	BOOT_FAILURE                     LCM_STATE  =  36
-	BOOT_MIGRATE_FAILURE             LCM_STATE  =  37
-	PROLOG_MIGRATE_FAILURE           LCM_STATE  =  38
-	PROLOG_FAILURE                   LCM_STATE  =  39
-	EPILOG_FAILURE                   LCM_STATE  =  40
-	EPILOG_STOP_FAILURE              LCM_STATE  =  41
-	EPILOG_UNDEPLOY_FAILURE          LCM_STATE  =  42
-	PROLOG_MIGRATE_POWEROFF          LCM_STATE  =  43
-	PROLOG_MIGRATE_POWEROFF_FAILURE  LCM_STATE  =  44
-	PROLOG_MIGRATE_SUSPEND           LCM_STATE  =  45
-	PROLOG_MIGRATE_SUSPEND_FAILURE   LCM_STATE  =  46
-	BOOT_UNDEPLOY_FAILURE            LCM_STATE  =  47
-	BOOT_STOPPED_FAILURE             LCM_STATE  =  48
-	PROLOG_RESUME_FAILURE            LCM_STATE  =  49
-	PROLOG_UNDEPLOY_FAILURE          LCM_STATE  =  50
-	DISK_SNAPSHOT_POWEROFF           LCM_STATE  =  51
-	DISK_SNAPSHOT_REVERT_POWEROFF    LCM_STATE  =  52
-	DISK_SNAPSHOT_DELETE_POWEROFF    LCM_STATE  =  53
-	DISK_SNAPSHOT_SUSPENDED          LCM_STATE  =  54
-	DISK_SNAPSHOT_REVERT_SUSPENDED   LCM_STATE  =  55
-	DISK_SNAPSHOT_DELETE_SUSPENDED   LCM_STATE  =  56
-	DISK_SNAPSHOT                    LCM_STATE  =  57
-	//DISK_SNAPSHOT_REVERT           LCM_STATE  =  58
-	DISK_SNAPSHOT_DELETE             LCM_STATE  =  59
-	PROLOG_MIGRATE_UNKNOWN           LCM_STATE  =  60
-	PROLOG_MIGRATE_UNKNOWN_FAILURE   LCM_STATE  =  61
-	)
+	// LcmInit lcm state
+	LcmInit LCMState = 0
 
-func (l LCM_STATE) String() string {
+	// Prolog lcm state
+	Prolog LCMState = 1
+
+	// Boot lcm state
+	Boot LCMState = 2
+
+	// Running lcm state
+	Running LCMState = 3
+
+	// Migrate lcm state
+	Migrate LCMState = 4
+
+	// SaveStop lcm state
+	SaveStop LCMState = 5
+
+	// SaveSuspend lcm state
+	SaveSuspend LCMState = 6
+
+	// SaveMigrate lcm state
+	SaveMigrate LCMState = 7
+
+	// PrologMigrate lcm state
+	PrologMigrate LCMState = 8
+
+	// PrologResume lcm state
+	PrologResume LCMState = 9
+
+	// EpilogStop lcm state
+	EpilogStop LCMState = 10
+
+	// Epilog lcm state
+	Epilog LCMState = 11
+
+	// Shutdown lcm state
+	Shutdown LCMState = 12
+
+	// Deprecated
+	// Cancel LCMState  =  13
+	// Failure LCMState  =  14
+
+	// CleanupResubmit lcm state
+	CleanupResubmit LCMState = 15
+
+	// Unknown lcm state
+	Unknown LCMState = 16
+
+	// Hotplug lcm state
+	Hotplug LCMState = 17
+
+	// ShutdownPoweroff lcm state
+	ShutdownPoweroff LCMState = 18
+
+	// BootUnknown lcm state
+	BootUnknown LCMState = 19
+
+	// BootPoweroff lcm state
+	BootPoweroff LCMState = 20
+
+	// BootSuspended lcm state
+	BootSuspended LCMState = 21
+
+	// BootStopped lcm state
+	BootStopped LCMState = 22
+
+	// CleanupDelete lcm state
+	CleanupDelete LCMState = 23
+
+	// HotplugSnapshot lcm state
+	HotplugSnapshot LCMState = 24
+
+	// HotplugNic lcm state
+	HotplugNic LCMState = 25
+
+	// HotplugSaveas lcm state
+	HotplugSaveas LCMState = 26
+
+	// HotplugSaveasPoweroff lcm state
+	HotplugSaveasPoweroff LCMState = 27
+
+	// HotplugSaveasSuspended lcm state
+	HotplugSaveasSuspended LCMState = 28
+
+	// ShutdownUndeploy lcm state
+	ShutdownUndeploy LCMState = 29
+
+	// EpilogUndeploy lcm state
+	EpilogUndeploy LCMState = 30
+
+	// PrologUndeploy lcm state
+	PrologUndeploy LCMState = 31
+
+	// BootUndeploy lcm state
+	BootUndeploy LCMState = 32
+
+	// HotplugPrologPoweroff lcm state
+	HotplugPrologPoweroff LCMState = 33
+
+	// HotplugEpilogPoweroff lcm state
+	HotplugEpilogPoweroff LCMState = 34
+
+	// BootMigrate lcm state
+	BootMigrate LCMState = 35
+
+	// BootFailure lcm state
+	BootFailure LCMState = 36
+
+	// BootMigrateFailure lcm state
+	BootMigrateFailure LCMState = 37
+
+	// PrologMigrateFailure lcm state
+	PrologMigrateFailure LCMState = 38
+
+	// PrologFailure lcm state
+	PrologFailure LCMState = 39
+
+	// EpilogFailure lcm state
+	EpilogFailure LCMState = 40
+
+	// EpilogStopFailure lcm state
+	EpilogStopFailure LCMState = 41
+
+	// EpilogUndeployFailure lcm state
+	EpilogUndeployFailure LCMState = 42
+
+	// PrologMigratePoweroff lcm state
+	PrologMigratePoweroff LCMState = 43
+
+	// PrologMigratePoweroffFailure lcm state
+	PrologMigratePoweroffFailure LCMState = 44
+
+	// PrologMigrateSuspend lcm state
+	PrologMigrateSuspend LCMState = 45
+
+	// PrologMigrateSuspendFailure lcm state
+	PrologMigrateSuspendFailure LCMState = 46
+
+	// BootUndeployFailure lcm state
+	BootUndeployFailure LCMState = 47
+
+	// BootStoppedFailure lcm state
+	BootStoppedFailure LCMState = 48
+
+	// PrologResumeFailure lcm state
+	PrologResumeFailure LCMState = 49
+
+	// PrologUndeployFailure lcm state
+	PrologUndeployFailure LCMState = 50
+
+	// DiskSnapshotPoweroff lcm state
+	DiskSnapshotPoweroff LCMState = 51
+
+	// DiskSnapshotRevertPoweroff lcm state
+	DiskSnapshotRevertPoweroff LCMState = 52
+
+	// DiskSnapshotDeletePoweroff lcm state
+	DiskSnapshotDeletePoweroff LCMState = 53
+
+	// DiskSnapshotSuspended lcm state
+	DiskSnapshotSuspended LCMState = 54
+
+	// DiskSnapshotRevertSuspended lcm state
+	DiskSnapshotRevertSuspended LCMState = 55
+
+	// DiskSnapshotDeleteSuspended lcm state
+	DiskSnapshotDeleteSuspended LCMState = 56
+
+	// DiskSnapshot lcm state
+	DiskSnapshot LCMState = 57
+
+	// Deprecated
+	// DiskSnapshotRevert LCMState  =  58
+
+	// DiskSnapshotDelete lcm state
+	DiskSnapshotDelete LCMState = 59
+
+	// PrologMigrateUnknown lcm state
+	PrologMigrateUnknown LCMState = 60
+
+	// PrologMigrateUnknownFailure lcm state
+	PrologMigrateUnknownFailure LCMState = 61
+
+	// DiskResize lcm state
+	DiskResize LCMState = 62
+
+	// DiskResizePoweroff lcm state
+	DiskResizePoweroff LCMState = 63
+
+	// DiskResizeUndeployed lcm state
+	DiskResizeUndeployed LCMState = 64
+)
+
+func (l LCMState) String() string {
 	switch l {
-	case LCM_INIT:                        return "LCM_INIT"
-	case PROLOG:                          return "PROLOG"
-	case BOOT:                            return "BOOT"
-	case RUNNING:                         return "RUNNING"
-	case MIGRATE:                         return "MIGRATE"
-	case SAVE_STOP:                       return "SAVE_STOP"
-	case SAVE_SUSPEND:                    return "SAVE_SUSPEND"
-	case SAVE_MIGRATE:                    return "SAVE_MIGRATE"
-	case PROLOG_MIGRATE:                  return "PROLOG_MIGRATE"
-	case PROLOG_RESUME:                   return "PROLOG_RESUME"
-	case EPILOG_STOP:                     return "EPILOG_STOP"
-	case EPILOG:                          return "EPILOG"
-	case SHUTDOWN:                        return "SHUTDOWN"
-	case CLEANUP_RESUBMIT:                return "CLEANUP_RESUBMIT"
-	case UNKNOWN:                         return "UNKNOWN"
-	case HOTPLUG:                         return "HOTPLUG"
-	case SHUTDOWN_POWEROFF:               return "SHUTDOWN_POWEROFF"
-	case BOOT_UNKNOWN:                    return "BOOT_UNKNOWN"
-	case BOOT_POWEROFF:                   return "BOOT_POWEROFF"
-	case BOOT_SUSPENDED:                  return "BOOT_SUSPENDED"
-	case BOOT_STOPPED:                    return "BOOT_STOPPED"
-	case CLEANUP_DELETE:                  return "CLEANUP_DELETE"
-	case HOTPLUG_SNAPSHOT:                return "HOTPLUG_SNAPSHOT"
-	case HOTPLUG_NIC:                     return "HOTPLUG_NIC"
-	case HOTPLUG_SAVEAS:                  return "HOTPLUG_SAVEAS"
-	case HOTPLUG_SAVEAS_POWEROFF:         return "HOTPLUG_SAVEAS_POWEROFF"
-	case HOTPLUG_SAVEAS_SUSPENDED:        return "HOTPLUG_SAVEAS_SUSPENDED"
-	case SHUTDOWN_UNDEPLOY:               return "SHUTDOWN_UNDEPLOY"
-	case EPILOG_UNDEPLOY:                 return "EPILOG_UNDEPLOY"
-	case PROLOG_UNDEPLOY:                 return "PROLOG_UNDEPLOY"
-	case BOOT_UNDEPLOY:                   return "BOOT_UNDEPLOY"
-	case HOTPLUG_PROLOG_POWEROFF:         return "HOTPLUG_PROLOG_POWEROFF"
-	case HOTPLUG_EPILOG_POWEROFF:         return "HOTPLUG_EPILOG_POWEROFF"
-	case BOOT_MIGRATE:                    return "BOOT_MIGRATE"
-	case BOOT_FAILURE:                    return "BOOT_FAILURE"
-	case BOOT_MIGRATE_FAILURE:            return "BOOT_MIGRATE_FAILURE"
-	case PROLOG_MIGRATE_FAILURE:          return "PROLOG_MIGRATE_FAILURE"
-	case PROLOG_FAILURE:                  return "PROLOG_FAILURE"
-	case EPILOG_FAILURE:                  return "EPILOG_FAILURE"
-	case EPILOG_STOP_FAILURE:             return "EPILOG_STOP_FAILURE"
-	case EPILOG_UNDEPLOY_FAILURE:         return "EPILOG_UNDEPLOY_FAILURE"
-	case PROLOG_MIGRATE_POWEROFF:         return "PROLOG_MIGRATE_POWEROFF"
-	case PROLOG_MIGRATE_POWEROFF_FAILURE: return "PROLOG_MIGRATE_POWEROFF_FAILURE"
-	case PROLOG_MIGRATE_SUSPEND:          return "PROLOG_MIGRATE_SUSPEND"
-	case PROLOG_MIGRATE_SUSPEND_FAILURE:  return "PROLOG_MIGRATE_SUSPEND_FAILURE"
-	case BOOT_UNDEPLOY_FAILURE:           return "BOOT_UNDEPLOY_FAILURE"
-	case BOOT_STOPPED_FAILURE:            return "BOOT_STOPPED_FAILURE"
-	case PROLOG_RESUME_FAILURE:           return "PROLOG_RESUME_FAILURE"
-	case PROLOG_UNDEPLOY_FAILURE:         return "PROLOG_UNDEPLOY_FAILURE"
-	case DISK_SNAPSHOT_POWEROFF:          return "DISK_SNAPSHOT_POWEROFF"
-	case DISK_SNAPSHOT_REVERT_POWEROFF:   return "DISK_SNAPSHOT_REVERT_POWEROFF"
-	case DISK_SNAPSHOT_DELETE_POWEROFF:   return "DISK_SNAPSHOT_DELETE_POWEROFF"
-	case DISK_SNAPSHOT_SUSPENDED:         return "DISK_SNAPSHOT_SUSPENDED"
-	case DISK_SNAPSHOT_REVERT_SUSPENDED:  return "DISK_SNAPSHOT_REVERT_SUSPENDED"
-	case DISK_SNAPSHOT_DELETE_SUSPENDED:  return "DISK_SNAPSHOT_DELETE_SUSPENDED"
-	case DISK_SNAPSHOT:                   return "DISK_SNAPSHOT"
-	case DISK_SNAPSHOT_DELETE:            return "DISK_SNAPSHOT_DELETE"
-	case PROLOG_MIGRATE_UNKNOWN:          return "PROLOG_MIGRATE_UNKNOWN"
-	case PROLOG_MIGRATE_UNKNOWN_FAILURE:  return "PROLOG_MIGRATE_UNKNOWN_FAILURE"
-	default: return ""
+	case LcmInit:
+		return "LCM_INIT"
+	case Prolog:
+		return "PROLOG"
+	case Boot:
+		return "BOOT"
+	case Running:
+		return "RUNNING"
+	case Migrate:
+		return "MIGRATE"
+	case SaveStop:
+		return "SAVE_STOP"
+	case SaveSuspend:
+		return "SAVESuspend"
+	case SaveMigrate:
+		return "SAVE_MIGRATE"
+	case PrologMigrate:
+		return "PROLOG_MIGRATE"
+	case PrologResume:
+		return "PROLOG_RESUME"
+	case EpilogStop:
+		return "EPILOG_STOP"
+	case Epilog:
+		return "EPILOG"
+	case SHUTDOWN:
+		return "SHUTDOWN"
+	case CleanupResubmit:
+		return "CLEANUP_RESUBMIT"
+	case Unknown:
+		return "UNKNOWN"
+	case Hotplug:
+		return "HOTPLUG"
+	case ShutdownPoweroff:
+		return "SHUTDOWN_POWEROFF"
+	case BootUnknown:
+		return "BOOT_UNKNOWN"
+	case BootPoweroff:
+		return "BOOT_POWEROFF"
+	case BootSuspended:
+		return "BOOTSuspendED"
+	case BootStopped:
+		return "BOOT_STOPPED"
+	case CleanupDelete:
+		return "CLEANUP_DELETE"
+	case HotplugSnapshot:
+		return "HOTPLUG_SNAPSHOT"
+	case HotplugNic:
+		return "HOTPLUG_NIC"
+	case HotplugSaveas:
+		return "HOTPLUG_SAVEAS"
+	case HotplugSaveasPoweroff:
+		return "HOTPLUG_SAVEAS_POWEROFF"
+	case HotplugSaveasSuspended:
+		return "HOTPLUG_SAVEASSuspendED"
+	case ShutdownUndeploy:
+		return "SHUTDOWN_UNDEPLOY"
+	case EpilogUndeploy:
+		return "EPILOG_UNDEPLOY"
+	case PrologUndeploy:
+		return "PROLOG_UNDEPLOY"
+	case BootUndeploy:
+		return "BOOT_UNDEPLOY"
+	case HotplugPrologPoweroff:
+		return "HOTPLUG_PROLOG_POWEROFF"
+	case Hotplug_EpilogPoweroff:
+		return "HOTPLUG_EPILOG_POWEROFF"
+	case BootMigrate:
+		return "BOOT_MIGRATE"
+	case BootFailure:
+		return "BOOT_FAILURE"
+	case BootMigrateFailure:
+		return "BOOT_MIGRATE_FAILURE"
+	case PrologMigrateFailure:
+		return "PROLOG_MIGRATE_FAILURE"
+	case PrologFailure:
+		return "PROLOG_FAILURE"
+	case EpilogFailure:
+		return "EPILOG_FAILURE"
+	case EpilogStopFailure:
+		return "EPILOG_STOP_FAILURE"
+	case EpilogUndeployFailure:
+		return "EPILOG_UNDEPLOY_FAILURE"
+	case PrologMigratePoweroff:
+		return "PROLOG_MIGRATE_POWEROFF"
+	case PrologMigratePoweroffFailure:
+		return "PROLOG_MIGRATE_POWEROFF_FAILURE"
+	case PrologMigrateSuspend:
+		return "PROLOG_MIGRATESuspend"
+	case PrologMigrateSuspendFailure:
+		return "PROLOG_MIGRATESuspend_FAILURE"
+	case BootUndeployFailure:
+		return "BOOT_UNDEPLOY_FAILURE"
+	case BootStoppedFailure:
+		return "BOOT_STOPPED_FAILURE"
+	case PrologResumeFailure:
+		return "PROLOG_RESUME_FAILURE"
+	case PrologUndeployFailure:
+		return "PROLOG_UNDEPLOY_FAILURE"
+	case DiskSnapshotPoweroff:
+		return "DISK_SNAPSHOT_POWEROFF"
+	case DiskSnapshotRevertPoweroff:
+		return "DISK_SNAPSHOT_REVERT_POWEROFF"
+	case DiskSnapshotDeletePoweroff:
+		return "DISK_SNAPSHOT_DELETE_POWEROFF"
+	case DiskSnapshotSuspended:
+		return "DISK_SNAPSHOTSuspendED"
+	case DiskSnapshotRevertSuspended:
+		return "DISK_SNAPSHOT_REVERTSuspendED"
+	case DiskSnapshotDeleteSuspended:
+		return "DISK_SNAPSHOT_DELETESuspendED"
+	case DiskSnapshot:
+		return "DISK_SNAPSHOT"
+	case DiskSnapshotDelete:
+		return "DISK_SNAPSHOT_DELETE"
+	case PrologMigrateUnknown:
+		return "PROLOG_MIGRATE_UNKNOWN"
+	case PrologMigrateUnknownFailure:
+		return "PROLOG_MIGRATE_UNKNOWN_FAILURE"
+	case DiskResize:
+		return "DISK_RESIZE"
+	case DiskResizePoweroff:
+		return "DISK_RESIZE_POWEROFF"
+	case DiskResizeUndeployed:
+		return "DISK_RESIZE_UNDEPLOYED"
+	default:
+		return ""
 	}
 }
 
+// NewVMPool returns a new image pool. It accepts the scope of the query.
 func NewVMPool(args ...int) (*VMPool, error) {
-	var who, start_id, end_id, state int
+	var who, start, end, state int
 
 	switch len(args) {
 	case 0:
 		who = PoolWhoMine
-		start_id = -1
-		end_id = -1
+		start = -1
+		end = -1
 		state = -1
 	case 1:
 		who = args[0]
-		start_id = -1
-		end_id = -1
+		start = -1
+		end = -1
 		state = -1
 	case 3:
 		who = args[0]
-		start_id = args[1]
-		end_id = args[2]
+		start = args[1]
+		end = args[2]
 		state = -1
 	case 4:
 		who = args[0]
-		start_id = args[1]
-		end_id = args[2]
+		start = args[1]
+		end = args[2]
 		state = args[3]
 	default:
 		return nil, errors.New("Wrong number of arguments")
 	}
 
-	response, err := client.Call("one.vmpool.info", who, start_id, end_id, state)
+	response, err := client.Call("one.vmpool.info", who, start, end, state)
 	if err != nil {
 		return nil, err
 	}
@@ -221,6 +457,8 @@ func NewVMPool(args ...int) (*VMPool, error) {
 
 }
 
+// CreateVM allocates a new VM based on the template string provided. It
+// returns the image ID
 func CreateVM(template string, pending bool) (uint, error) {
 	response, err := client.Call("one.vm.allocate", template, pending)
 	if err != nil {
@@ -230,17 +468,22 @@ func CreateVM(template string, pending bool) (uint, error) {
 	return uint(response.BodyInt()), nil
 }
 
+// NewVM finds an VM by ID returns a new VM object. At this stage no
+// connection to OpenNebula is performed.
 func NewVM(id uint) *VM {
-	return &VM{Id: id}
+	return &VM{ID: id}
 }
 
+// NewVMFromName finds the VM by name and returns a VM object. It connects to
+// OpenNebula to retrieve the pool, but doesn't perform the Info() call to
+// retrieve the attributes of the VM.
 func NewVMFromName(name string) (*VM, error) {
 	vmpool, err := NewVMPool()
 	if err != nil {
 		return nil, err
 	}
 
-	id, err := vmpool.GetIdFromName(name, "/VM_POOL/VM")
+	id, err := vmpool.GetIDFromName(name, "/VM_POOL/VM")
 	if err != nil {
 		return nil, err
 	}
@@ -248,100 +491,119 @@ func NewVMFromName(name string) (*VM, error) {
 	return NewVM(id), nil
 }
 
+// Info connects to OpenNebula and fetches the information of the VM
 func (vm *VM) Info() error {
-	response, err := client.Call("one.vm.info", vm.Id)
+	response, err := client.Call("one.vm.info", vm.ID)
 	vm.body = response.Body()
 	return err
 }
 
-func (vm *VM) State() (int, int, error) {
-	vm_stateString, ok := vm.XPath("/VM/STATE")
+// State returns the VMState and LCMState
+func (vm *VM) State() (VMState, LCMState, error) {
+	vmStateString, ok := vm.XPath("/VM/STATE")
 	if ok != true {
 		return -1, -1, errors.New("Unable to parse VM State")
 	}
 
-	lcm_stateString, ok := vm.XPath("/VM/LCM_STATE")
+	lcmStateString, ok := vm.XPath("/VM/LCM_STATE")
 	if ok != true {
 		return -1, -1, errors.New("Unable to parse LCM State")
 	}
 
-	vm_state, _ := strconv.Atoi(vm_stateString)
-	lcm_state, _ := strconv.Atoi(lcm_stateString)
+	vmState, _ := strconv.Atoi(vmStateString)
+	lcmState, _ := strconv.Atoi(lcmStateString)
 
-	return vm_state, lcm_state, nil
+	return VMState(vmState), LCMState(lcmState), nil
 }
 
+// StateString returns the VMState and LCMState as strings
 func (vm *VM) StateString() (string, string, error) {
-	vm_state, lcm_state, err := vm.State()
+	vmState, lcmState, err := vm.State()
 	if err != nil {
 		return "", "", err
 	}
-	return VM_STATE(vm_state).String(), LCM_STATE(lcm_state).String(), nil
+	return VMState(vmState).String(), LCMState(lcmState).String(), nil
 }
 
+// Action is the generic method to run any action on the VM
 func (vm *VM) Action(action string) error {
-	_, err := client.Call("one.vm.action", action, vm.Id)
+	_, err := client.Call("one.vm.action", action, vm.ID)
 	return err
 }
 
 // VM Actions
 
+// TerminateHard action on the VM
 func (vm *VM) TerminateHard() error {
 	return vm.Action("terminate-hard")
 }
 
+// Terminate action on the VM
 func (vm *VM) Terminate() error {
 	return vm.Action("terminate")
 }
 
+// UndeployHard action on the VM
 func (vm *VM) UndeployHard() error {
 	return vm.Action("undeploy-hard")
 }
 
+// Undeploy action on the VM
 func (vm *VM) Undeploy() error {
 	return vm.Action("undeploy")
 }
 
+// PoweroffHard action on the VM
 func (vm *VM) PoweroffHard() error {
 	return vm.Action("poweroff-hard")
 }
 
+// Poweroff action on the VM
 func (vm *VM) Poweroff() error {
 	return vm.Action("poweroff")
 }
 
+// RebootHard action on the VM
 func (vm *VM) RebootHard() error {
 	return vm.Action("reboot-hard")
 }
 
+// Reboot action on the VM
 func (vm *VM) Reboot() error {
 	return vm.Action("reboot")
 }
 
+// Hold action on the VM
 func (vm *VM) Hold() error {
 	return vm.Action("hold")
 }
 
+// Release action on the VM
 func (vm *VM) Release() error {
 	return vm.Action("release")
 }
 
+// Stop action on the VM
 func (vm *VM) Stop() error {
 	return vm.Action("stop")
 }
 
+// Suspend action on the VM
 func (vm *VM) Suspend() error {
 	return vm.Action("suspend")
 }
 
+// Resume action on the VM
 func (vm *VM) Resume() error {
 	return vm.Action("resume")
 }
 
+// Resched action on the VM
 func (vm *VM) Resched() error {
 	return vm.Action("resched")
 }
 
+// Unresched action on the VM
 func (vm *VM) Unresched() error {
 	return vm.Action("unresched")
 }

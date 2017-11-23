@@ -4,16 +4,20 @@ import (
 	"errors"
 )
 
+// Template represents an OpenNebula Template
 type Template struct {
 	XMLResource
-	Id   uint
+	ID   uint
 	Name string
 }
 
+// TemplatePool represents an OpenNebula TemplatePool
 type TemplatePool struct {
 	XMLResource
 }
 
+// CreateTemplate allocates a new template pool. It returns the new template's
+// ID.
 func CreateTemplate(template string) (uint, error) {
 	response, err := client.Call("one.template.allocate")
 	if err != nil {
@@ -23,23 +27,25 @@ func CreateTemplate(template string) (uint, error) {
 	return uint(response.BodyInt()), nil
 }
 
+// NewTemplatePool returns a template pool. A connection to OpenNebula is
+// performed.
 func NewTemplatePool(args ...int) (*TemplatePool, error) {
-	var who, start_id, end_id int
+	var who, start, end int
 
 	switch len(args) {
 	case 0:
 		who = PoolWhoMine
-		start_id = -1
-		end_id = -1
+		start = -1
+		end = -1
 	case 3:
 		who = args[0]
-		start_id = args[1]
-		end_id = args[2]
+		start = args[1]
+		end = args[2]
 	default:
 		return nil, errors.New("Wrong number of arguments")
 	}
 
-	response, err := client.Call("one.templatepool.info", who, start_id, end_id)
+	response, err := client.Call("one.templatepool.info", who, start, end)
 	if err != nil {
 		return nil, err
 	}
@@ -50,17 +56,21 @@ func NewTemplatePool(args ...int) (*TemplatePool, error) {
 
 }
 
+// NewTemplate finds a template object by ID. No connection to OpenNebula.
 func NewTemplate(id uint) *Template {
-	return &Template{Id: id}
+	return &Template{ID: id}
 }
 
+// NewTemplateFromName finds a template object by name. It connects to
+// OpenNebula to retrieve the pool, but doesn't perform the Info() call to
+// retrieve the attributes of the template.
 func NewTemplateFromName(name string) (*Template, error) {
 	templatePool, err := NewTemplatePool()
 	if err != nil {
 		return nil, err
 	}
 
-	id, err := templatePool.GetIdFromName(name, "/VMTEMPLATE_POOL/VMTEMPLATE")
+	id, err := templatePool.GetIDFromName(name, "/VMTEMPLATE_POOL/VMTEMPLATE")
 	if err != nil {
 		return nil, err
 	}
@@ -68,19 +78,22 @@ func NewTemplateFromName(name string) (*Template, error) {
 	return NewTemplate(id), nil
 }
 
+// Info connects to OpenNebula and fetches the information of the Template
 func (template *Template) Info() error {
-	response, err := client.Call("one.template.info", template.Id)
+	response, err := client.Call("one.template.info", template.ID)
 	template.body = response.Body()
 	return err
 }
 
+// Delete will remove the template from OpenNebula.
 func (template *Template) Delete() error {
-	_, err := client.Call("one.template.delete", template.Id)
+	_, err := client.Call("one.template.delete", template.ID)
 	return err
 }
 
+// Instantiate will instantiate the template
 func (template *Template) Instantiate(name string, pending bool, extra string) (uint, error) {
-	response, err := client.Call("one.template.instantiate", template.Id, name, pending, extra)
+	response, err := client.Call("one.template.instantiate", template.ID, name, pending, extra)
 
 	if err != nil {
 		return 0, err
