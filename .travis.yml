@@ -4,6 +4,10 @@ sudo: false
 go:
     - 1.8
 
+branches:
+  only:
+  - master
+
 before_install:
   # Install Glide
   - mkdir -p "${GOPATH}/bin"
