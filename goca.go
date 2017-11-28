@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/kolo/xmlrpc"
-	"gopkg.in/xmlpath.v1"
+	"gopkg.in/xmlpath.v2"
 )
 
 var (
