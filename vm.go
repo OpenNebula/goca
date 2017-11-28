@@ -312,7 +312,7 @@ func (l LCMState) String() string {
 		return "EPILOG_STOP"
 	case Epilog:
 		return "EPILOG"
-	case SHUTDOWN:
+	case Shutdown:
 		return "SHUTDOWN"
 	case CleanupResubmit:
 		return "CLEANUP_RESUBMIT"
@@ -352,7 +352,7 @@ func (l LCMState) String() string {
 		return "BOOT_UNDEPLOY"
 	case HotplugPrologPoweroff:
 		return "HOTPLUG_PROLOG_POWEROFF"
-	case Hotplug_EpilogPoweroff:
+	case HotplugEpilogPoweroff:
 		return "HOTPLUG_EPILOG_POWEROFF"
 	case BootMigrate:
 		return "BOOT_MIGRATE"
