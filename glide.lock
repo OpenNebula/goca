@@ -1,10 +1,8 @@
-hash: 634c33603dabe553215ad6f7613f817a62ba22387b17137713246d89bc06c08f
-updated: 2017-11-28T11:58:50.906218981+01:00
+hash: ac9bb59552226f818b59a1f54831140c20901e060de067f144f54d4e100d0e12
+updated: 2017-11-28T12:03:57.539724958+01:00
 imports:
 - name: github.com/kolo/xmlrpc
   version: 0826b98aaa29c0766956cb40d45cf7482a597671
-- name: github.com/mattn/goveralls
-  version: b71a1e4855f87991aff01c2c833a75a07059c61c
 - name: golang.org/x/net
   version: fc492d2e106922eb3aa4bca863d55e882c087ae3
   subpackages:

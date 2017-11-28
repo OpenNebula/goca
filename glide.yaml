@@ -2,4 +2,3 @@ package: github.com/OpenNebula/goca
 import:
 - package: github.com/kolo/xmlrpc
 - package: gopkg.in/xmlpath.v2
-- package: github.com/mattn/goveralls
