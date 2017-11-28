@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/OpenNebula/goca.svg?branch=master)](https://travis-ci.org/OpenNebula/goca)
+[![Coverage Status](https://coveralls.io/repos/github/OpenNebula/goca/badge.svg?branch=master)](https://coveralls.io/github/OpenNebula/goca?branch=master)
+
 # goca
 
 Go bindings for OpenNebula (incomplete).
