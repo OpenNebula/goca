@@ -54,6 +54,15 @@ type response struct {
 	bodyInt int
 }
 
+// Resource implements an OpenNebula Resource methods. *XMLResource implements
+// all these methods
+type Resource interface {
+	Body() string
+	XPath(string) (string, bool)
+	XPathIter(string) *XMLIter
+	GetIDFromName(string, string) (uint, error)
+}
+
 // XMLResource contains an XML body field. All the resources in OpenNebula are
 // of this kind.
 type XMLResource struct {
@@ -103,7 +112,7 @@ func NewConfig(user string, password string, xmlrpcURL string) OneConfig {
 	}
 
 	if oneXmlrpc == "" {
-		oneXmlrpc = os.Getenv("oneXmlrpc")
+		oneXmlrpc = os.Getenv("ONE_XMLRPC")
 		if oneXmlrpc == "" {
 			oneXmlrpc = "http://localhost:2633/RPC2"
 		}

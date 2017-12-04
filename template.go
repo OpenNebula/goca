@@ -16,10 +16,9 @@ type TemplatePool struct {
 	XMLResource
 }
 
-// CreateTemplate allocates a new template pool. It returns the new template's
-// ID.
+// CreateTemplate allocates a new template. It returns the new template ID.
 func CreateTemplate(template string) (uint, error) {
-	response, err := client.Call("one.template.allocate")
+	response, err := client.Call("one.template.allocate", template)
 	if err != nil {
 		return 0, err
 	}
@@ -100,4 +99,11 @@ func (template *Template) Instantiate(name string, pending bool, extra string) (
 	}
 
 	return uint(response.BodyInt()), nil
+}
+
+// Update will modify the template. If appendTemplate is 0, it will
+// replace the whole template. If its 1, it will merge.
+func (template *Template) Update(tpl string, appendTemplate int) error {
+	_, err := client.Call("one.template.update", template.ID, tpl, appendTemplate)
+	return err
 }
