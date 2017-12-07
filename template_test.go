@@ -4,8 +4,6 @@ import (
 	"testing"
 )
 
-const TemplateRoot = "VMTEMPLATE"
-
 // Helper to create a template
 func createTemplate(t *testing.T) *Template {
 	templateName := GenName("template")

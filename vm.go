@@ -498,6 +498,13 @@ func (vm *VM) Info() error {
 	return err
 }
 
+// Update will modify the VM's template. If appendTemplate is 0, it will
+// replace the whole template. If its 1, it will merge.
+func (vm *VM) Update(tpl string, appendTemplate int) error {
+	_, err := client.Call("one.vm.update", vm.ID, tpl, appendTemplate)
+	return err
+}
+
 // State returns the VMState and LCMState
 func (vm *VM) State() (VMState, LCMState, error) {
 	vmStateString, ok := vm.XPath("/VM/STATE")
@@ -606,4 +613,41 @@ func (vm *VM) Resched() error {
 // Unresched action on the VM
 func (vm *VM) Unresched() error {
 	return vm.Action("unresched")
+}
+
+// Resize changes the capacity of the virtual machine
+func (vm *VM) Resize(template string, enforce bool) error {
+	_, err := client.Call("one.vm.resize", vm.ID, template, enforce)
+	return err
+}
+
+// Recover recovers a stuck VM that is waiting for a driver operation
+func (vm *VM) Recover(op int) error {
+	_, err := client.Call("one.vm.recover", vm.ID, op)
+	return err
+}
+
+// RecoverSuccess forces a success
+func (vm *VM) RecoverSuccess() error {
+	return vm.Recover(1)
+}
+
+// RecoverFailure forces a success
+func (vm *VM) RecoverFailure() error {
+	return vm.Recover(0)
+}
+
+// RecoverRetry forces a success
+func (vm *VM) RecoverRetry() error {
+	return vm.Recover(2)
+}
+
+// RecoverDelete forces a delete
+func (vm *VM) RecoverDelete() error {
+	return vm.Recover(3)
+}
+
+// RecoverDeleteRecreate forces a delete
+func (vm *VM) RecoverDeleteRecreate() error {
+	return vm.Recover(4)
 }

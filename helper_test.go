@@ -33,3 +33,13 @@ func GenName(name string) string {
 	h := fmt.Sprintf("%x", md5.Sum(d))[:6]
 	return name + "-" + h
 }
+
+func WaitResource(f func() bool) bool {
+	for i := 0; i < 20; i++ {
+		if f() {
+			return true
+		}
+		time.Sleep(2 * time.Second)
+	}
+	return false
+}

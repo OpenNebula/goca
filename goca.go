@@ -1,17 +1,14 @@
 package goca
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/kolo/xmlrpc"
-	"gopkg.in/xmlpath.v2"
 )
 
 var (
@@ -61,22 +58,6 @@ type Resource interface {
 	XPath(string) (string, bool)
 	XPathIter(string) *XMLIter
 	GetIDFromName(string, string) (uint, error)
-}
-
-// XMLResource contains an XML body field. All the resources in OpenNebula are
-// of this kind.
-type XMLResource struct {
-	body string
-}
-
-// XMLIter is used to iterate over XML xpaths in an object.
-type XMLIter struct {
-	iter *xmlpath.Iter
-}
-
-// XMLNode represent an XML node.
-type XMLNode struct {
-	node *xmlpath.Node
 }
 
 // Initializes the client variable, used as a singleton
@@ -208,74 +189,4 @@ func (r *response) Body() string {
 // BodyInt accesses the body of the response, if it's an int.
 func (r *response) BodyInt() int {
 	return r.bodyInt
-}
-
-// Body accesses the body of an XMLResource
-func (r *XMLResource) Body() string {
-	return r.body
-}
-
-// XPath returns the string pointed at by xpath, for an XMLResource
-func (r *XMLResource) XPath(xpath string) (string, bool) {
-	path := xmlpath.MustCompile(xpath)
-	b := bytes.NewBufferString(r.Body())
-
-	root, _ := xmlpath.Parse(b)
-
-	return path.String(root)
-}
-
-// XPathIter returns an XMLIter object pointed at by the xpath
-func (r *XMLResource) XPathIter(xpath string) *XMLIter {
-	path := xmlpath.MustCompile(xpath)
-	b := bytes.NewBufferString(string(r.Body()))
-
-	root, _ := xmlpath.Parse(b)
-
-	return &XMLIter{iter: path.Iter(root)}
-}
-
-// GetIDFromName finds the a resource by ID by looking at an xpath contained
-// in that resource
-func (r *XMLResource) GetIDFromName(name string, xpath string) (uint, error) {
-	var id int
-	var match = false
-
-	iter := r.XPathIter(xpath)
-	for iter.Next() {
-		node := iter.Node()
-
-		n, _ := node.XPathNode("NAME")
-		if n == name {
-			if match {
-				return 0, errors.New("multiple resources with that name")
-			}
-
-			idString, _ := node.XPathNode("ID")
-			id, _ = strconv.Atoi(idString)
-			match = true
-		}
-	}
-
-	if !match {
-		return 0, errors.New("resource not found")
-	}
-
-	return uint(id), nil
-}
-
-// Next moves on to the next resource
-func (i *XMLIter) Next() bool {
-	return i.iter.Next()
-}
-
-// Node returns the XMLNode
-func (i *XMLIter) Node() *XMLNode {
-	return &XMLNode{node: i.iter.Node()}
-}
-
-// XPathNode returns an XMLNode pointed at by xpath
-func (n *XMLNode) XPathNode(xpath string) (string, bool) {
-	path := xmlpath.MustCompile(xpath)
-	return path.String(n.node)
 }

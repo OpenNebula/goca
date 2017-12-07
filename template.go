@@ -4,6 +4,9 @@ import (
 	"errors"
 )
 
+// TemplateRoot is the XML root node
+const TemplateRoot = "VMTEMPLATE"
+
 // Template represents an OpenNebula Template
 type Template struct {
 	XMLResource
