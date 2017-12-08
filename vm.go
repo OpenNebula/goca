@@ -457,6 +457,64 @@ func NewVMPool(args ...int) (*VMPool, error) {
 
 }
 
+// Monitoring returns all the virtual machine monitorin records
+// filter flag:
+// -4: Resources belonging to the user's primary group
+// -3: Resources belonging to the user
+// -2: All resources
+// -1: Resources belonging to the user and any of his groups
+// >= 0: UID User's Resources
+func (vmpool *VMPool) Monitoring(filter int) {
+	_, err := client.Call("one.vmpool.monitoring", filter)
+	return err
+}
+
+// Accounting returns the virtual machine history records
+// filter flag:
+//   -4: Resources belonging to the user's primary group
+//   -3: Resources belonging to the user
+//   -2: All resources
+//   -1: Resources belonging to the user and any of his groups
+//   >= 0: UID User's Resources
+// if startTime and/or endTime are -1 it means no limit
+func (vmpool *VMPool) Accounting(filter, startTime, endTime int) {
+	_, err := client.Call("one.vmpool.accounting", filter)
+	return err
+}
+
+// Showback returns the virtual machine showback records
+// filter flag
+//   <= -3: Connected user's resources
+//   -2: All resources
+//   -1: Connected user's and his group's resources
+//   >= 0: UID User's Resources
+// firstMonth: January is 1. Can be -1, in which case the time interval won't have
+//   a left boundary.
+// firstYear: Can be -1, in which case the time interval won't have a left
+//   boundary.
+// lastMonth: January is 1. Can be -1, in which case the time interval won't have
+//   a right boundary.
+// lastYear: Can be -1, in which case the time interval won't have a right
+//   boundary.
+func (vmpool *VMPool) Showback(filter, firstMonth, firstYear, lastMonth, lastYear) {
+	_, err := client.Call("one.vmpool.showback", filter, firstMonth, firstYear, lastMonth, lastYear)
+	return err
+}
+
+// CalculateShowback processes all the history records, and stores the monthly cost for each VM
+// firstMonth: January is 1. Can be -1, in which case the time interval won't have
+//   a left boundary.
+// firstYear: Can be -1, in which case the time interval won't have a left
+//   boundary.
+// lastMonth: January is 1. Can be -1, in which case the time interval won't have
+//   a right boundary.
+// lastYear: Can be -1, in which case the time interval won't have a right
+//   boundary.
+func (vmpool *VMPool) CalculateShowback(firstMonth, firstYear, lastMonth, lastYear) {
+	_, err := client.Call("one.vmpool.calculateshowback", firstMonth, firstYear, lastMonth, lastYear)
+	return err
+}
+
 // CreateVM allocates a new VM based on the template string provided. It
 // returns the image ID
 func CreateVM(template string, pending bool) (uint, error) {
