@@ -491,20 +491,6 @@ func NewVMFromName(name string) (*VM, error) {
 	return NewVM(id), nil
 }
 
-// Info connects to OpenNebula and fetches the information of the VM
-func (vm *VM) Info() error {
-	response, err := client.Call("one.vm.info", vm.ID)
-	vm.body = response.Body()
-	return err
-}
-
-// Update will modify the VM's template. If appendTemplate is 0, it will
-// replace the whole template. If its 1, it will merge.
-func (vm *VM) Update(tpl string, appendTemplate int) error {
-	_, err := client.Call("one.vm.update", vm.ID, tpl, appendTemplate)
-	return err
-}
-
 // State returns the VMState and LCMState
 func (vm *VM) State() (VMState, LCMState, error) {
 	vmStateString, ok := vm.XPath("/VM/STATE")
@@ -537,6 +523,139 @@ func (vm *VM) Action(action string) error {
 	_, err := client.Call("one.vm.action", action, vm.ID)
 	return err
 }
+
+// Info connects to OpenNebula and fetches the information of the VM
+func (vm *VM) Info() error {
+	response, err := client.Call("one.vm.info", vm.ID)
+	vm.body = response.Body()
+	return err
+}
+
+// Update will modify the VM's template. If appendTemplate is 0, it will
+// replace the whole template. If its 1, it will merge.
+func (vm *VM) Update(tpl string, appendTemplate int) error {
+	_, err := client.Call("one.vm.update", vm.ID, tpl, appendTemplate)
+	return err
+}
+
+// UpdateConf updates (appends) a set of supported configuration attributes in
+// the VM template
+func (vm *VM) UpdateConf(tpl string) error {
+	_, err := client.Call("one.vm.updateconf", vm.ID, tpl)
+	return err
+}
+
+// Monitoring Returns the virtual machine monitoring records
+func (vm *VM) Monitoring() error {
+	_, err := client.Call("one.vm.monitoring", vm.ID)
+	return err
+}
+
+// Chown changes the owner/group of a VM. If uid or gid is -1 it will not
+// change
+func (vm *VM) Chown(uid, gid int) error {
+	_, err := client.Call("one.vm.chown", vm.ID, uid, gid)
+	return err
+}
+
+// Chmod changes the permissions of a VM. If any perm is -1 it will not
+// change
+func (vm *VM) Chmod(uu, um, ua, gu, gm, ga, ou, om, oa int) error {
+	_, err := client.Call("one.vm.chmod", vm.ID, uu, um, ua, gu, gm, ga, ou, om, oa)
+	return err
+}
+
+// Rename changes the name of a VM
+func (vm *VM) Rename(newName string) error {
+	_, err := client.Call("one.vm.rename", vm.ID, newName)
+	return err
+}
+
+// Delete will remove the VM from OpenNebula
+func (vm *VM) Delete() error {
+	_, err := client.Call("one.vm.delete", vm.ID)
+	return err
+}
+
+// Deploy in the selected hostID and/or dsID. Enforce to return error in case of
+// overcommitment. Enforce is automatically enabled for non-oneadmin users.
+func (vm *VM) Deploy(hostID uint, enforce bool, dsID uint) error {
+	_, err := client.Call("one.vm.deploy", vm.ID, int(hostID), enforce, int(dsID))
+	return err
+}
+
+// Resize changes the capacity of the virtual machine
+func (vm *VM) Resize(template string, enforce bool) error {
+	_, err := client.Call("one.vm.resize", vm.ID, template, enforce)
+	return err
+}
+
+// DiskSaveas exports a disk to an image. If imageType is empty the default one
+// will be used. If snapID is -1 the current image state will be exported
+func (vm *VM) DiskSaveas(diskID int, imageName, imageType string, snapID int) error {
+	_, err := client.Call("one.vm.disksaveas", vm.ID, diskID, imageName, imageType, snapID)
+	return err
+}
+
+// DiskSnapshotCreate will create a snapshot of the disk image
+func (vm *VM) DiskSnapshotCreate(diskID int, description string) error {
+	_, err := client.Call("one.vm.disksnapshotcreate", vm.ID, diskID, description)
+	return err
+}
+
+// DiskSnapshotDelete will delete a snapshot
+func (vm *VM) DiskSnapshotDelete(diskID, snapID int) error {
+	_, err := client.Call("one.vm.disksnapshotdelete", vm.ID, diskID, snapID)
+	return err
+}
+
+// DiskSnapshotRevert will revert disk state to a previously taken snapshot
+func (vm *VM) DiskSnapshotRevert(diskID, snapID int) error {
+	_, err := client.Call("one.vm.disksnapshotrevert", vm.ID, diskID, snapID)
+	return err
+}
+
+// SnapshotCreate creates a new virtual machine snapshot. name can be empty
+func (vm *VM) SnapshotCreate(name string) error {
+	_, err := client.Call("one.vm.snapshotcreate", vm.ID, diskID, description)
+	return err
+}
+
+// SnapshotDelete deletes a virtual machine snapshot
+func (vm *VM) SnapshotDelete(snapID int) error {
+	_, err := client.Call("one.vm.snapshotdelete", vm.ID, snapID)
+	return err
+}
+
+// SnapshotRevert reverts a virtual machine to a snapshot
+func (vm *VM) SnapshotRevert(snapID int) error {
+	_, err := client.Call("one.vm.snapshotrevert", vm.ID, snapID)
+	return err
+}
+
+// Attach a new disk to the virtual machine. diskTemplate is a string containing
+// a single DISK vector attribute. Syntax can be the usual attribute=value or
+// XML
+func (vm *VM) Attach(diskTemplate string) error {
+	_, err := client.Call("one.vm.attach", vm.ID, diskTemplate)
+	return err
+}
+
+// Detach a disk from a virtual machine
+func (vm *VM) Detach(diskID int) error {
+	_, err := client.Call("one.vm.detach", vm.ID, diskID)
+	return err
+}
+
+// DiskResize a disk of a virtual machine
+func (vm *VM) DiskResize(diskID int, size string) error {
+	_, err := client.Call("one.vm.diskresize", vm.ID, diskID, size)
+	return err
+}
+
+// one.vm.migrate
+// one.vm.attachnic
+// one.vm.detachnic
 
 // VM Actions
 
@@ -615,11 +734,7 @@ func (vm *VM) Unresched() error {
 	return vm.Action("unresched")
 }
 
-// Resize changes the capacity of the virtual machine
-func (vm *VM) Resize(template string, enforce bool) error {
-	_, err := client.Call("one.vm.resize", vm.ID, template, enforce)
-	return err
-}
+// End actions
 
 // Recover recovers a stuck VM that is waiting for a driver operation
 func (vm *VM) Recover(op int) error {
