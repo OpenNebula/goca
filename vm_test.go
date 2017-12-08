@@ -82,7 +82,8 @@ func VMExpectState(c *C, vm *VM, state, lcmState string) func() bool {
 
 func (s *VMSuite) TestVMDeploy(c *C) {
 	vm := NewVM(s.vmID)
-	vm.Release()
+	err := vm.Release()
+	c.Assert(err, IsNil)
 	c.Assert(WaitResource(VMExpectState(c, vm, "ACTIVE", "RUNNING")), Equals, true)
 }
 
@@ -90,7 +91,8 @@ func (s *VMSuite) TestVMHoldRelease(c *C) {
 	vm := NewVM(s.vmID)
 	c.Assert(WaitResource(VMExpectState(c, vm, "HOLD", "")), Equals, true)
 
-	vm.Release()
+	err := vm.Release()
+	c.Assert(err, IsNil)
 	c.Assert(WaitResource(VMExpectState(c, vm, "PENDING", "")), Equals, true)
 }
 
@@ -115,16 +117,19 @@ func (s *VMSuite) TestVMUpdate(c *C) {
 
 func (s *VMSuite) TestVMTerminate(c *C) {
 	vm := NewVM(s.vmID)
-	vm.Release()
+	err := vm.Release()
+	c.Assert(err, IsNil)
 	c.Assert(WaitResource(VMExpectState(c, vm, "ACTIVE", "RUNNING")), Equals, true)
 
-	vm.Terminate()
+	err = vm.Terminate()
+	c.Assert(err, IsNil)
 	c.Assert(WaitResource(VMExpectState(c, vm, "DONE", "")), Equals, true)
 }
 
 func (s *VMSuite) TestVMTerminateHard(c *C) {
 	vm := NewVM(s.vmID)
-	vm.Release()
+	err := vm.Release()
+	c.Assert(err, IsNil)
 	c.Assert(WaitResource(VMExpectState(c, vm, "ACTIVE", "RUNNING")), Equals, true)
 
 	vm.TerminateHard()
@@ -133,49 +138,60 @@ func (s *VMSuite) TestVMTerminateHard(c *C) {
 
 func (s *VMSuite) TestVMStop(c *C) {
 	vm := NewVM(s.vmID)
-	vm.Release()
+	err := vm.Release()
+	c.Assert(err, IsNil)
 	c.Assert(WaitResource(VMExpectState(c, vm, "ACTIVE", "RUNNING")), Equals, true)
 
-	vm.Stop()
+	err = vm.Stop()
+	c.Assert(err, IsNil)
 	c.Assert(WaitResource(VMExpectState(c, vm, "STOPPED", "")), Equals, true)
 }
 
 func (s *VMSuite) TestVMSuspend(c *C) {
 	vm := NewVM(s.vmID)
-	vm.Release()
+	err := vm.Release()
+	c.Assert(err, IsNil)
 	c.Assert(WaitResource(VMExpectState(c, vm, "ACTIVE", "RUNNING")), Equals, true)
 
-	vm.Suspend()
+	err = vm.Suspend()
+	c.Assert(err, IsNil)
 	c.Assert(WaitResource(VMExpectState(c, vm, "SUSPENDED", "")), Equals, true)
 }
 
 func (s *VMSuite) TestVMResume(c *C) {
 	vm := NewVM(s.vmID)
-	vm.Release()
+	err := vm.Release()
+	c.Assert(err, IsNil)
 	c.Assert(WaitResource(VMExpectState(c, vm, "ACTIVE", "RUNNING")), Equals, true)
 
-	vm.Suspend()
+	err = vm.Suspend()
+	c.Assert(err, IsNil)
 	c.Assert(WaitResource(VMExpectState(c, vm, "SUSPENDED", "")), Equals, true)
 
-	vm.Resume()
+	err = vm.Resume()
+	c.Assert(err, IsNil)
 	c.Assert(WaitResource(VMExpectState(c, vm, "ACTIVE", "RUNNING")), Equals, true)
 }
 
 func (s *VMSuite) TestVMResize(c *C) {
 	vm := NewVM(s.vmID)
-	vm.Release()
+	err := vm.Release()
+	c.Assert(err, IsNil)
 	c.Assert(WaitResource(VMExpectState(c, vm, "ACTIVE", "RUNNING")), Equals, true)
 
-	vm.Poweroff()
+	err = vm.Poweroff()
+	c.Assert(err, IsNil)
 	c.Assert(WaitResource(VMExpectState(c, vm, "POWEROFF", "")), Equals, true)
 
-	vm.Resize("CPU=2.5\nMEMORY=512", false)
+	err = vm.Resize("CPU=2.5\nMEMORY=512", false)
+	c.Assert(err, IsNil)
 	c.Assert(WaitResource(VMExpectState(c, vm, "POWEROFF", "")), Equals, true)
 
-	vm.Resume()
+	err = vm.Resume()
+	c.Assert(err, IsNil)
 	c.Assert(WaitResource(VMExpectState(c, vm, "ACTIVE", "RUNNING")), Equals, true)
 
-	err := vm.Info()
+	err = vm.Info()
 	c.Assert(err, IsNil)
 
 	cpu, ok := vm.XPath("/VM/TEMPLATE/CPU")
