@@ -87,6 +87,33 @@ func (template *Template) Info() error {
 	return err
 }
 
+// Update will modify the template. If appendTemplate is 0, it will
+// replace the whole template. If its 1, it will merge.
+func (template *Template) Update(tpl string, appendTemplate int) error {
+	_, err := client.Call("one.template.update", template.ID, tpl, appendTemplate)
+	return err
+}
+
+// Chown changes the owner/group of a template. If uid or gid is -1 it will not
+// change
+func (template *Template) Chown(uid, gid int) error {
+	_, err := client.Call("one.template.chown", template.ID, uid, gid)
+	return err
+}
+
+// Chmod changes the permissions of a template. If any perm is -1 it will not
+// change
+func (template *Template) Chmod(uu, um, ua, gu, gm, ga, ou, om, oa int) error {
+	_, err := client.Call("one.template.chmod", template.ID, uu, um, ua, gu, gm, ga, ou, om, oa)
+	return err
+}
+
+// Rename changes the name of template
+func (template *Template) Rename(newName string) error {
+	_, err := client.Call("one.template.rename", template.ID, newName)
+	return err
+}
+
 // Delete will remove the template from OpenNebula.
 func (template *Template) Delete() error {
 	_, err := client.Call("one.template.delete", template.ID)
@@ -104,9 +131,9 @@ func (template *Template) Instantiate(name string, pending bool, extra string) (
 	return uint(response.BodyInt()), nil
 }
 
-// Update will modify the template. If appendTemplate is 0, it will
-// replace the whole template. If its 1, it will merge.
-func (template *Template) Update(tpl string, appendTemplate int) error {
-	_, err := client.Call("one.template.update", template.ID, tpl, appendTemplate)
+// Clone an existing template. If recursive is true it will clone the template
+// plus any image defined in DISK. The new IMAGE_ID is set into each DISK.
+func (template *Template) Clone(name string, recursive bool) error {
+	_, err := client.Call("one.template.clone", template.ID, name, recursive)
 	return err
 }

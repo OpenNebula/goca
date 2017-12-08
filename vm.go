@@ -653,9 +653,23 @@ func (vm *VM) DiskResize(diskID int, size string) error {
 	return err
 }
 
-// one.vm.migrate
-// one.vm.attachnic
-// one.vm.detachnic
+// Migrate a VM to a target host and/or to another ds
+func (vm *VM) Migrate(hostID uint, live, enforce bool, dsID uint) error {
+	_, err := client.Call("one.vm.migrate", int(hostID), live, enforce, int(dsID))
+	return err
+}
+
+// Attachnic attaches new network interface to the virtual machine
+func (vm *VM) AttachNic(tpl string) error {
+	_, err := client.Call("one.vm.attachnic", vm.ID, tpl)
+	return err
+}
+
+// DetachNic detaches a network interface from the virtual machine
+func (vm *VM) DetachNic(nicID string) error {
+	_, err := client.Call("one.vm.detachnic", vm.ID, nicID)
+	return err
+}
 
 // VM Actions
 
