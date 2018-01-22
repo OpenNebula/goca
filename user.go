@@ -132,9 +132,3 @@ func (user *User) Info() error {
 	_, err := client.Call("one.user.info", user.ID)
 	return err
 }
-
-// Update updates the default user quota limits.
-func (userquota *UserQuota) Update() error {
-	_, err := client.Call("one.userquota.update", userquota.ID)
-	return err
-}

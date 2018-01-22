@@ -5,9 +5,10 @@ type ACLPool struct {
 	XMLResource
 }
 
-// Info returns the complete ACL rule set.
-func (aclpool *ACLPool) Info() error {
-	response, err := client.Call("one.acl.info", acl.ID)
+// NewACLPool returns an acl pool. A connection to OpenNebula is
+// performed.
+func NewACLPool() (*ACLPool, error) {
+	response, err := client.Call("one.acl.info")
 	if err != nil {
 		return nil, err
 	}

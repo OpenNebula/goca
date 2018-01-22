@@ -54,8 +54,8 @@ func NewDocument(id uint) *Document {
 // NewDocumentFromName finds a document object by name. It connects to
 // OpenNebula to retrieve the pool, but doesn't perform the Info() call to
 // retrieve the attributes of the document.
-func NewDocumentFromName(name string) (*Document, error) {
-	documentPool, err := NewDocumentPool()
+func NewDocumentFromName(name string, documentType int) (*Document, error) {
+	documentPool, err := NewDocumentPool(documentType)
 	if err != nil {
 		return nil, err
 	}

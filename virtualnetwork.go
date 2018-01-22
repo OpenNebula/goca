@@ -16,7 +16,7 @@ type VirtualNetworkPool struct {
 
 // NewVirtualNetworkPool returns a virtualnetwork pool. A connection to OpenNebula is
 // performed.
-func NewVirtualNetworkPool(virtualnetworkType int, args ...int) (*VirtualNetworkPool, error) {
+func NewVirtualNetworkPool(args ...int) (*VirtualNetworkPool, error) {
 	var who, start, end int
 
 	switch len(args) {
@@ -36,7 +36,7 @@ func NewVirtualNetworkPool(virtualnetworkType int, args ...int) (*VirtualNetwork
 		return nil, errors.New("Wrong number of arguments")
 	}
 
-	response, err := client.Call("one.vnpool.info", who, start, end, virtualnetworkType)
+	response, err := client.Call("one.vnpool.info", who, start, end)
 	if err != nil {
 		return nil, err
 	}

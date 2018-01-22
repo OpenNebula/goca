@@ -57,12 +57,6 @@ func CreateGroup(name string) (uint, error) {
 	return uint(response.BodyInt()), nil
 }
 
-// Update updates the default group quota limits.
-func (groupquota *GroupQuota) Update() error {
-	_, err := client.Call("one.groupquota.update", groupquota.ID)
-	return err
-}
-
 // Delete deletes the given group from the pool.
 func (group *Group) Delete() error {
 	_, err := client.Call("one.group.delete", group.ID)
