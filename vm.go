@@ -464,7 +464,7 @@ func NewVMPool(args ...int) (*VMPool, error) {
 // -2: All resources
 // -1: Resources belonging to the user and any of his groups
 // >= 0: UID User's Resources
-func (vmpool *VMPool) Monitoring(filter int) {
+func (vmpool *VMPool) Monitoring(filter int) error {
 	_, err := client.Call("one.vmpool.monitoring", filter)
 	return err
 }
@@ -477,7 +477,7 @@ func (vmpool *VMPool) Monitoring(filter int) {
 //   -1: Resources belonging to the user and any of his groups
 //   >= 0: UID User's Resources
 // if startTime and/or endTime are -1 it means no limit
-func (vmpool *VMPool) Accounting(filter, startTime, endTime int) {
+func (vmpool *VMPool) Accounting(filter, startTime, endTime int) error {
 	_, err := client.Call("one.vmpool.accounting", filter)
 	return err
 }
@@ -496,7 +496,7 @@ func (vmpool *VMPool) Accounting(filter, startTime, endTime int) {
 //   a right boundary.
 // lastYear: Can be -1, in which case the time interval won't have a right
 //   boundary.
-func (vmpool *VMPool) Showback(filter, firstMonth, firstYear, lastMonth, lastYear) {
+func (vmpool *VMPool) Showback(filter, firstMonth, firstYear, lastMonth, lastYear int) error {
 	_, err := client.Call("one.vmpool.showback", filter, firstMonth, firstYear, lastMonth, lastYear)
 	return err
 }
@@ -510,7 +510,7 @@ func (vmpool *VMPool) Showback(filter, firstMonth, firstYear, lastMonth, lastYea
 //   a right boundary.
 // lastYear: Can be -1, in which case the time interval won't have a right
 //   boundary.
-func (vmpool *VMPool) CalculateShowback(firstMonth, firstYear, lastMonth, lastYear) {
+func (vmpool *VMPool) CalculateShowback(firstMonth, firstYear, lastMonth, lastYear int) error {
 	_, err := client.Call("one.vmpool.calculateshowback", firstMonth, firstYear, lastMonth, lastYear)
 	return err
 }
@@ -675,7 +675,7 @@ func (vm *VM) DiskSnapshotRevert(diskID, snapID int) error {
 
 // SnapshotCreate creates a new virtual machine snapshot. name can be empty
 func (vm *VM) SnapshotCreate(name string) error {
-	_, err := client.Call("one.vm.snapshotcreate", vm.ID, diskID, description)
+	_, err := client.Call("one.vm.snapshotcreate", vm.ID, name)
 	return err
 }
 
@@ -717,7 +717,7 @@ func (vm *VM) Migrate(hostID uint, live, enforce bool, dsID uint) error {
 	return err
 }
 
-// Attachnic attaches new network interface to the virtual machine
+// AttachNic attaches new network interface to the virtual machine
 func (vm *VM) AttachNic(tpl string) error {
 	_, err := client.Call("one.vm.attachnic", vm.ID, tpl)
 	return err
