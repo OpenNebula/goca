@@ -4,9 +4,6 @@ import (
 	"errors"
 )
 
-// TemplateRoot is the XML root node
-const TemplateRoot = "VMTEMPLATE"
-
 // Template represents an OpenNebula Template
 type Template struct {
 	XMLResource
@@ -17,16 +14,6 @@ type Template struct {
 // TemplatePool represents an OpenNebula TemplatePool
 type TemplatePool struct {
 	XMLResource
-}
-
-// CreateTemplate allocates a new template. It returns the new template ID.
-func CreateTemplate(template string) (uint, error) {
-	response, err := client.Call("one.template.allocate", template)
-	if err != nil {
-		return 0, err
-	}
-
-	return uint(response.BodyInt()), nil
 }
 
 // NewTemplatePool returns a template pool. A connection to OpenNebula is
@@ -78,6 +65,16 @@ func NewTemplateFromName(name string) (*Template, error) {
 	}
 
 	return NewTemplate(id), nil
+}
+
+// CreateTemplate allocates a new template. It returns the new template ID.
+func CreateTemplate(template string) (uint, error) {
+	response, err := client.Call("one.template.allocate", template)
+	if err != nil {
+		return 0, err
+	}
+
+	return uint(response.BodyInt()), nil
 }
 
 // Info connects to OpenNebula and fetches the information of the Template
