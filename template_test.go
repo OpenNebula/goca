@@ -34,7 +34,7 @@ func createTemplate(t *testing.T) *Template {
 func TestTemplateCreateAndDelete(t *testing.T) {
 	template := createTemplate(t)
 
-	idParse, err := GetID(t, template, TemplateRoot)
+	idParse, err := GetID(t, template, "VMTEMPLATE")
 	if err != nil {
 		t.Error(err)
 	}
@@ -59,7 +59,7 @@ func TestTemplateCreateAndDelete(t *testing.T) {
 		t.Error(err)
 	}
 
-	idParse, err = GetID(t, template, TemplateRoot)
+	idParse, err = GetID(t, template, "VMTEMPLATE")
 
 	if idParse != template.ID {
 		t.Errorf("Template ID does not match")
