@@ -45,6 +45,9 @@ This example demonstrates how get the information of a running VM, print its nam
         }
 
         name, _ := vm.XPath("/VM/NAME")
+        if err != nil {
+            log.Fatal(err)
+        }
 
         fmt.Println(name)
 
