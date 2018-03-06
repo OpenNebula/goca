@@ -166,3 +166,13 @@ func (image *Image) Delete() error {
 	_, err := client.Call("one.image.delete", image.ID)
 	return err
 }
+
+// Update will update the image on OpenNebula
+func (image *Image) Update(template string, merge bool) error {
+	mergeInt := 0
+	if merge {
+		mergeInt = 1
+	}
+	_, err := client.Call("one.image.update", image.ID, template, mergeInt)
+	return err
+}
