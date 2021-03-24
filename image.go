@@ -166,3 +166,62 @@ func (image *Image) Delete() error {
 	_, err := client.Call("one.image.delete", image.ID)
 	return err
 }
+
+// Update will update the image on OpenNebula
+func (image *Image) Update(template string, merge int) error {
+	_, err := client.Call("one.image.update", image.ID, template, merge)
+	return err
+}
+
+// ImageChmodOptions is the options set for the chmod() API call
+type ImageChmodOptions struct {
+	UserUse     int
+	UserManage  int
+	UserAdmin   int
+	GroupUse    int
+	GroupManage int
+	GroupAdmin  int
+	OtherUse    int
+	OtherManage int
+	OtherAdmin  int
+}
+
+// NewImageChmodOptions returns ACL options for an image template initialized
+// with "no op" values.
+// See https://docs.opennebula.org/<version>/integration/system_interfaces/api.html#actions-for-image-management
+// for more informations
+func NewImageChmodOptions() ImageChmodOptions {
+	return ImageChmodOptions{
+		UserUse:     -1,
+		UserManage:  -1,
+		UserAdmin:   -1,
+		GroupUse:    -1,
+		GroupManage: -1,
+		GroupAdmin:  -1,
+		OtherUse:    -1,
+		OtherManage: -1,
+		OtherAdmin:  -1,
+	}
+}
+
+// Chmod will change the ACL of the image template on OpenNebula
+func (image *Image) Chmod(opts ImageChmodOptions) error {
+	_, err := client.Call("one.image.chmod", image.ID,
+		opts.UserUse,
+		opts.UserManage,
+		opts.UserAdmin,
+		opts.GroupUse,
+		opts.GroupManage,
+		opts.GroupAdmin,
+		opts.OtherUse,
+		opts.OtherManage,
+		opts.OtherAdmin,
+	)
+	return err
+}
+
+// Chown will change the owner of the image template on OpenNebula
+func (image *Image) Chown(userId, groupId int) error {
+	_, err := client.Call("one.image.chown", image.ID, userId, groupId)
+	return err
+}
